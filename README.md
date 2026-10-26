@@ -119,7 +119,7 @@ u_000042  2  Paul Is Dead            Scooter;Timmy Trumpet    45.5  because you 
 ## 🚀 Run it locally (DuckDB)
 
 ```bash
-git clone https://github.com/<your-username>/muse-dbt.git && cd muse-dbt
+git clone https://github.com/larrozeemma-btz/muse-dbt.git && cd muse-dbt
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt -r requirements-data.txt
 
@@ -148,6 +148,10 @@ the incremental fact is then rebuilt as a partitioned, clustered table.
 
 Cross-database macros live in [`macros/cross_db.sql`](macros/cross_db.sql)
 (timestamp parsing, string explode, date spine, date arithmetic…).
+
+**Parity check** — the same build on both engines gives identical events (3,967,231),
+sessions (506,811), revenue and playlists; recommendation pairs differ by 0.03 %
+because the engines round a few scores differently at the top-50 retrieval cut-off.
 
 ---
 
