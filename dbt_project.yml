@@ -1,0 +1,63 @@
+name: muse
+version: "1.0.0"
+config-version: 2
+
+profile: muse
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+analysis-paths: ["analyses"]
+
+clean-targets: ["target", "dbt_packages", "logs"]
+
+vars:
+  # MUSE scoring weights (slide 4). Must sum to 1 — enforced by a singular test.
+  muse_weight_genre: 0.5
+  muse_weight_history: 0.3
+  muse_weight_popularity: 0.2
+  # Size of the playlist returned to each listener (slide 3: "return top five").
+  muse_top_n: 5
+  # Discovery mode: do not recommend tracks the listener has already played.
+  muse_exclude_listened_tracks: true
+  # Engagement points per event type, used to build the listening-history signal.
+  muse_event_points:
+    play: 1
+    repeat: 2
+    like: 3
+    skip: -1
+
+models:
+  muse:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      core:
+        +schema: core
+      recommendations:
+        +schema: recommendations
+      presentation:
+        +schema: presentation
+
+seeds:
+  muse:
+    +schema: raw
+    raw_listening_events:
+      +column_types:
+        event_id: varchar
+        user_id: varchar
+        track_id: varchar
+        event_type: varchar
+        event_at: timestamp
+        ms_played: integer
+    raw_tracks:
+      +column_types:
+        release_date: date
+        duration_ms: integer
+        is_explicit: boolean

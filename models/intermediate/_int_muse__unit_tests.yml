@@ -1,0 +1,25 @@
+version: 2
+
+unit_tests:
+  - name: test_genre_match_exact_parent_and_unrelated
+    description: >
+      A listener who declared "Synth Pop" at 90 gets 90 for Synth Pop,
+      45 for another Pop sub-genre, and 0 for an unrelated family.
+    model: int_user_genre_match
+    given:
+      - input: ref('stg_muse__users')
+        rows:
+          - {user_id: U1}
+      - input: ref('stg_muse__genres')
+        rows:
+          - {genre_name: Synth Pop, parent_genre: Pop}
+          - {genre_name: Dream Pop, parent_genre: Pop}
+          - {genre_name: Techno, parent_genre: Electronic}
+      - input: ref('stg_muse__user_genre_preferences')
+        rows:
+          - {user_id: U1, genre_name: Synth Pop, affinity: 90}
+    expect:
+      rows:
+        - {user_id: U1, genre_name: Synth Pop, genre_match_score: 90}
+        - {user_id: U1, genre_name: Dream Pop, genre_match_score: 45}
+        - {user_id: U1, genre_name: Techno, genre_match_score: 0}

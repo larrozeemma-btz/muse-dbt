@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: fct_recommendation_scores
+    description: >
+      MUSE score for every listener × candidate track:
+      `0.5 × genre_match + 0.3 × listening_history + 0.2 × popularity`,
+      ranked per listener. Cold-start listeners get the history weight
+      redistributed over the two other signals.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "track_id"]
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "recommendation_rank"]
+    columns:
+      - name: genre_match_score
+        data_tests: [not_null, score_between_0_and_100]
+      - name: listening_history_score
+        description: Null for cold-start listeners.
+        data_tests: [score_between_0_and_100]
+      - name: popularity_score
+        data_tests: [not_null, score_between_0_and_100]
+      - name: recommendation_score
+        data_tests: [not_null, score_between_0_and_100]
+
+  - name: rpt_top_recommendations
+    description: The top-N playlist (N = `muse_top_n`, default 5) served to each listener, with a human-readable reason.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "recommendation_rank"]
+    columns:
+      - name: user_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_users')
+                field: user_id
+      - name: recommendation_rank
+        description: 1 = best match. Playlist length is checked by `assert_every_listener_gets_a_full_playlist`.
+        data_tests: [not_null]
+      - name: recommendation_reason
+        data_tests: [not_null]
+
+exposures:
+  - name: muse_app_home_playlist
+    label: MUSE app — "Your Top 5" playlist
+    type: application
+    maturity: medium
+    description: The personalised top-five playlist shown on the MUSE home screen.
+    depends_on:
+      - ref('rpt_top_recommendations')
+    owner:
+      name: Emma Larroze

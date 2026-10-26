@@ -1,0 +1,23 @@
+version: 2
+
+# Raw data lands as dbt seeds in the `raw` schema. In production these would be
+# declared as sources pointing at the ingestion tables (Fivetran, Airbyte, ...).
+seeds:
+  - name: raw_users
+    description: App accounts as exported from the user service. Plan casing is inconsistent.
+  - name: raw_artists
+    description: Artist catalog.
+  - name: raw_tracks
+    description: Track catalog. Genre labels sometimes have stray whitespace / lowercase.
+  - name: raw_genres
+    description: Genre taxonomy with a parent family (e.g. Synth Pop → Pop).
+  - name: raw_user_genre_preferences
+    description: Favourite genres declared by listeners during onboarding, with an affinity 0–100.
+  - name: raw_listening_events
+    description: >
+      Append-only stream of listening events (play, skip, like, repeat).
+      Contains duplicated event_ids from at-least-once ingestion and mixed-case event types.
+  - name: presentation_song_scores
+    description: >
+      The 10 fictional tracks from the MUSE presentation (slide 8) with their
+      three pre-computed input scores. Used to reproduce the deck's demo output.

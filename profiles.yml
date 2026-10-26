@@ -1,0 +1,8 @@
+# Local profile — run dbt with `--profiles-dir .` or export DBT_PROFILES_DIR=.
+muse:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: muse.duckdb
+      threads: 4

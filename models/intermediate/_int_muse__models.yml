@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: int_user_genre_match
+    description: Genre-match signal (0–100) for every listener × genre.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "genre_name"]
+    columns:
+      - name: genre_match_score
+        data_tests: [not_null, score_between_0_and_100]
+
+  - name: int_user_track_engagement
+    description: Event counts and engagement points per listener × track.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "track_id"]
+
+  - name: int_user_history_affinity
+    description: Listener affinity (0–100) towards each artist and genre, derived from past listening.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "affinity_type", "affinity_key"]
+    columns:
+      - name: affinity_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["artist", "genre"]
+      - name: affinity_score
+        data_tests: [score_between_0_and_100]
+
+  - name: int_track_popularity
+    description: Popularity signal (0–100 percentile) per track.
+    columns:
+      - name: track_id
+        data_tests: [unique, not_null]
+      - name: popularity_score
+        data_tests: [not_null, score_between_0_and_100]
+
+  - name: int_user_track_candidates
+    description: Listener × track pairs eligible for recommendation.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "track_id"]

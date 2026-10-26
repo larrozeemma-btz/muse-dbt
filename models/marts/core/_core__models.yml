@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: dim_genres
+    description: Genre taxonomy.
+    columns:
+      - name: genre_name
+        data_tests: [unique, not_null]
+
+  - name: dim_artists
+    description: One row per artist, with catalog size.
+    columns:
+      - name: artist_id
+        data_tests: [unique, not_null]
+
+  - name: dim_tracks
+    description: One row per track, enriched with artist, genre family and popularity metrics.
+    columns:
+      - name: track_id
+        data_tests: [unique, not_null]
+      - name: popularity_score
+        description: 0–100 percentile of distinct listeners (the MUSE popularity signal).
+        data_tests: [not_null, score_between_0_and_100]
+
+  - name: dim_users
+    description: One row per listener with listening stats and cold-start flag.
+    columns:
+      - name: user_id
+        data_tests: [unique, not_null]
+      - name: is_cold_start
+        description: True when the listener has never completed a play (no history signal available).
+        data_tests: [not_null]
+
+  - name: fct_listening_events
+    description: Incremental, event-grain fact table of listening activity.
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: user_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_users')
+                field: user_id
+      - name: track_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_tracks')
+                field: track_id
