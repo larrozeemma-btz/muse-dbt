@@ -84,7 +84,7 @@ def simulate(con, n_users, seed):
     reco_launch = int((MUSE_RECO_LAUNCH - SIM_START).total_seconds())
 
     # ------------------------------------------------------------------ catalog
-    cat = con.sql("""
+    cat = con.execute("""
         select track_id, any_value(track_genre) as genre, max(popularity) as popularity,
                max(duration_ms) as duration_ms
         from raw.spotify_tracks
@@ -329,7 +329,7 @@ def main():
         select * exclude (column00), column00 as source_row_number
         from read_csv('{CATALOG_PATH}', header = true, auto_detect = true)
     """)
-    log(f"raw.{'spotify_tracks':<32} {con.sql('select count(*) from raw.spotify_tracks').fetchone()[0]:>12,} rows")
+    log(f"raw.{'spotify_tracks':<32} {con.execute('select count(*) from raw.spotify_tracks').fetchone()[0]:>12,} rows")
     simulate(con, args.users, args.seed)
     con.close()
     log("done")

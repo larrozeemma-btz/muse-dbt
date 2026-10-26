@@ -26,7 +26,7 @@ TABLES = ["spotify_tracks", "app_users", "onboarding_genre_preferences", "subscr
 
 def export_parquet(con, table):
     """Export one raw table. Timestamps become UTC microseconds so BigQuery loads them as TIMESTAMP."""
-    columns = con.sql(f"describe raw.{table}").fetchall()
+    columns = con.execute(f"describe raw.{table}").fetchall()
     select = ", ".join(
         f"cast({name} as timestamptz) as {name}" if col_type.startswith("TIMESTAMP") else name
         for name, col_type, *_ in columns
