@@ -1,24 +1,38 @@
+{#
+    Cleans the client event stream:
+      - parses both SDK timestamp formats (ISO-8601 with Z, and plain)
+      - normalises event_type casing
+      - drops logged-out events (no user)
+      - removes duplicate deliveries, keeping the first ingestion
+#}
+
 with source as (
 
-    select * from {{ ref('raw_listening_events') }}
+    select * from {{ source('muse_app', 'listening_events') }}
+    where user_id is not null
 
 ),
 
-deduplicated as (
+parsed as (
 
-    -- at-least-once ingestion re-sends some events: keep one row per event_id
-    select *
+    select
+        event_id,
+        user_id,
+        track_id,
+        lower(trim(event_type))                                         as event_type,
+        {{ parse_event_timestamp('event_at') }}                       as event_at,
+        ms_played,
+        device,
+        context                                                         as play_context,
+        cast(ingested_at as timestamp)                                  as ingested_at
     from source
-    qualify row_number() over (partition by event_id order by event_at) = 1
 
 )
 
 select
-    event_id,
-    user_id,
-    track_id,
-    lower(trim(event_type))             as event_type,
-    event_at,
-    cast(event_at as date)              as event_date,
-    ms_played
-from deduplicated
+    *,
+    cast(event_at as date)                                              as event_date,
+    event_type in ('play', 'skip')                                      as is_stream
+from parsed
+where event_id is not null
+qualify row_number() over (partition by event_id order by ingested_at) = 1

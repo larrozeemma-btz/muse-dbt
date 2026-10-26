@@ -1,4 +1,4 @@
--- Discovery mode: a listener should never be recommended a track they already played or liked.
+-- Discovery mode: a listener is never recommended a track they already played or liked.
 {{ config(enabled=var('muse_exclude_listened_tracks')) }}
 
 select r.user_id, r.track_id

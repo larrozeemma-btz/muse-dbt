@@ -3,13 +3,11 @@
 
 with expected as (
 
-    select * from (values
-        (1, 'Midnight Drive', 91.6),
-        (2, 'Golden Hour',    90.4),
-        (3, 'Electric Heart', 89.4),
-        (4, 'City Lights',    88.3),
-        (5, 'Soft Focus',     83.9)
-    ) as t(recommendation_rank, track_title, recommendation_score)
+    select 1 as recommendation_rank, 'Midnight Drive' as track_title, 91.6 as recommendation_score
+    union all select 2, 'Golden Hour',    90.4
+    union all select 3, 'Electric Heart', 89.4
+    union all select 4, 'City Lights',    88.3
+    union all select 5, 'Soft Focus',     83.9
 
 ),
 

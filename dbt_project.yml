@@ -25,8 +25,19 @@ vars:
   muse_event_points:
     play: 1
     repeat: 2
+    add_to_playlist: 3
     like: 3
     skip: -1
+  # Candidate generation (retrieval stage, before scoring).
+  muse_candidate_genres_per_user: 5     # listener's top genres to retrieve from
+  muse_candidates_per_genre: 50         # most popular tracks taken per genre
+  muse_candidate_artists_per_user: 5    # "more from artists you love"
+  muse_candidates_per_artist: 20
+  muse_trending_candidates: 50          # global fallback, also covers cold start
+  # Sessionisation: a gap longer than this starts a new listening session.
+  muse_session_timeout_minutes: 30
+  # Last day of data — used as "today" for churn / recency metrics.
+  muse_as_of_date: "2026-09-30"
 
 models:
   muse:
@@ -42,22 +53,11 @@ models:
         +schema: core
       recommendations:
         +schema: recommendations
+      analytics:
+        +schema: analytics
       presentation:
         +schema: presentation
 
 seeds:
   muse:
-    +schema: raw
-    raw_listening_events:
-      +column_types:
-        event_id: varchar
-        user_id: varchar
-        track_id: varchar
-        event_type: varchar
-        event_at: timestamp
-        ms_played: integer
-    raw_tracks:
-      +column_types:
-        release_date: date
-        duration_ms: integer
-        is_explicit: boolean
+    +schema: reference

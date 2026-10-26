@@ -1,7 +1,9 @@
+{{ config(materialized='table') }}
+
 {#
-    LISTENING HISTORY building blocks: how much a listener engaged with each
-    artist and each genre, normalised to 0–100 against that listener's own
-    favourite (so heavy and light listeners are comparable).
+    LISTENING HISTORY building blocks: engagement per listener × artist and
+    listener × genre, normalised 0–100 against the listener's own favourite,
+    so a light listener's favourite artist scores as high as a heavy one's.
 #}
 
 with engagement as (
@@ -10,32 +12,15 @@ with engagement as (
 
 ),
 
-tracks as (
-
-    select * from {{ ref('stg_muse__tracks') }}
-
-),
-
-enriched as (
-
-    select
-        engagement.user_id,
-        tracks.artist_id,
-        tracks.genre_name,
-        engagement.engagement_points
-    from engagement
-    inner join tracks using (track_id)
-
-),
-
 by_artist as (
 
     select
-        user_id,
-        'artist'                                as affinity_type,
-        artist_id                               as affinity_key,
-        greatest(sum(engagement_points), 0)     as raw_points
-    from enriched
+        engagement.user_id,
+        'artist'                                        as affinity_type,
+        track_artists.artist_id                         as affinity_key,
+        greatest(sum(engagement.engagement_points), 0)  as raw_points
+    from engagement
+    inner join {{ ref('stg_spotify__track_artists') }} as track_artists using (track_id)
     group by 1, 2, 3
 
 ),
@@ -43,11 +28,12 @@ by_artist as (
 by_genre as (
 
     select
-        user_id,
-        'genre'                                 as affinity_type,
-        genre_name                              as affinity_key,
-        greatest(sum(engagement_points), 0)     as raw_points
-    from enriched
+        engagement.user_id,
+        'genre'                                         as affinity_type,
+        tracks.primary_genre                            as affinity_key,
+        greatest(sum(engagement.engagement_points), 0)  as raw_points
+    from engagement
+    inner join {{ ref('stg_spotify__tracks') }} as tracks using (track_id)
     group by 1, 2, 3
 
 ),
@@ -65,8 +51,7 @@ select
     affinity_type,
     affinity_key,
     raw_points,
-    round(
-        100.0 * raw_points
-        / nullif(max(raw_points) over (partition by user_id, affinity_type), 0)
-    , 1) as affinity_score
+    coalesce(round(
+        100.0 * raw_points / nullif(max(raw_points) over (partition by user_id, affinity_type), 0)
+    , 1), 0) as affinity_score
 from unioned

@@ -1,0 +1,12 @@
+version: 2
+
+seeds:
+  - name: genre_families
+    description: Hand-curated mapping of the 114 Spotify genres to 16 broader families (Pop, Rock, Electronic, ...).
+    columns:
+      - name: genre_name
+        data_tests: [unique, not_null]
+      - name: genre_family
+        data_tests: [not_null]
+  - name: presentation_song_scores
+    description: The 10 fictional tracks from the MUSE deck (slide 8) with their three pre-computed input scores.

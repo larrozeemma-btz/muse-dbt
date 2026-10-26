@@ -1,0 +1,102 @@
+version: 2
+
+models:
+  - name: int_listening_events_sessionized
+    description: Every listening event tagged with its session (30-minute inactivity rule).
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: session_id
+        data_tests: [not_null]
+
+  - name: int_user_track_engagement
+    description: Event counts and engagement points per listener × track (catalog tracks only).
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "track_id"]
+
+  - name: int_user_genre_match
+    description: Sparse genre-match signal (0–100) per listener × genre, from onboarding answers.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "genre_name"]
+    columns:
+      - name: genre_match_score
+        data_tests: [not_null, score_between_0_and_100]
+
+  - name: int_user_history_affinity
+    description: Listener affinity (0–100) to each artist and genre, from past listening.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "affinity_type", "affinity_key"]
+    columns:
+      - name: affinity_score
+        data_tests: [not_null, score_between_0_and_100]
+
+  - name: int_track_popularity
+    description: Popularity signal per track — Spotify popularity blended with MUSE in-app reach.
+    columns:
+      - name: track_id
+        data_tests: [unique, not_null]
+      - name: popularity_score
+        data_tests: [not_null, score_between_0_and_100]
+
+  - name: int_user_track_candidates
+    description: Retrieval output — a few hundred unheard candidate tracks per listener, with where each came from.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "track_id"]
+    columns:
+      - name: candidate_sources
+        description: Comma-separated list among genre, artist, trending.
+        data_tests: [not_null]
+
+  - name: int_user_track_candidate_attributes
+    description: Candidate pairs expanded to their track's genres and artists (scoring join helper).
+    columns:
+      - name: attribute_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["genre", "artist"]
+
+unit_tests:
+  - name: test_sessionization_splits_after_30_minutes_of_silence
+    description: Two streams 10 min apart share a session; a stream 45 min later opens a new one.
+    model: int_listening_events_sessionized
+    overrides:
+      vars: {muse_session_timeout_minutes: 30}
+    given:
+      - input: ref('stg_muse__listening_events')
+        rows:
+          - {event_id: e1, user_id: U1, event_type: play, is_stream: true, event_at: "2026-03-01 08:00:00"}
+          - {event_id: e2, user_id: U1, event_type: play, is_stream: true, event_at: "2026-03-01 08:10:00"}
+          - {event_id: e3, user_id: U1, event_type: play, is_stream: true, event_at: "2026-03-01 08:55:00"}
+          - {event_id: e4, user_id: U2, event_type: play, is_stream: true, event_at: "2026-03-01 08:05:00"}
+    expect:
+      rows:
+        - {event_id: e1, user_session_number: 1}
+        - {event_id: e2, user_session_number: 1}
+        - {event_id: e3, user_session_number: 2}
+        - {event_id: e4, user_session_number: 1}
+
+  - name: test_genre_match_declared_and_same_family
+    description: Declaring deep-house at 90 gives 90 for deep-house, 45 for techno (same family), nothing for jazz.
+    model: int_user_genre_match
+    given:
+      - input: ref('stg_muse__user_genre_preferences')
+        rows:
+          - {user_id: U1, genre_name: deep-house, affinity: 90}
+      - input: ref('genre_families')
+        rows:
+          - {genre_name: deep-house, genre_family: Electronic}
+          - {genre_name: techno, genre_family: Electronic}
+          - {genre_name: jazz, genre_family: Jazz & Blues}
+    expect:
+      rows:
+        - {user_id: U1, genre_name: deep-house, genre_match_score: 90}
+        - {user_id: U1, genre_name: techno, genre_match_score: 45}

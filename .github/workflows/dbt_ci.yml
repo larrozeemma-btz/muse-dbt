@@ -16,8 +16,11 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: Install dbt
-        run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-data.txt
+
+      - name: Load raw data (real Spotify catalog + 1k simulated listeners)
+        run: python scripts/load_raw_data.py --users 1000
 
       - name: dbt build (seeds, models, tests)
         run: dbt build --profiles-dir .

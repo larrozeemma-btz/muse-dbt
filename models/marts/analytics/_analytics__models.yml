@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: rpt_daily_kpis
+    description: Daily audience, consumption, quality and revenue KPIs.
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: daily_active_users
+        data_tests: [not_null]
+
+  - name: rpt_cohort_retention
+    description: Monthly signup-cohort retention triangle.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["signup_cohort_month", "months_since_signup"]
+    columns:
+      - name: retention_rate
+        data_tests: [not_null]
+
+  - name: rpt_monthly_revenue
+    description: Month × paid plan — MRR, paying subscribers, starts and ends.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["month_start", "plan"]
+
+  - name: rpt_play_context_performance
+    description: Month × play context (playlist, search, muse_recommendation, ...) engagement quality.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["month_start", "play_context"]

@@ -1,12 +1,6 @@
-with source as (
-
-    select * from {{ ref('raw_user_genre_preferences') }}
-
-)
-
 select
     user_id,
-    trim(genre_name)                    as genre_name,
+    lower(trim(genre_name))                 as genre_name,
     affinity,
-    cast(declared_at as timestamp)      as declared_at
-from source
+    cast(declared_at as timestamp)          as declared_at
+from {{ source('muse_app', 'onboarding_genre_preferences') }}

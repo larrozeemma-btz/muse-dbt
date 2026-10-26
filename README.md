@@ -1,186 +1,164 @@
-# 🎵 MUSE — Music Recommendation Data Warehouse (dbt + DuckDB)
+# 🎵 MUSE — Music Recommendation Data Warehouse
 
 > *Your music. Your mood. Your algorithm.*
 
 **MUSE** is a music-discovery concept that ranks songs for each listener with a
-**transparent, explainable score**. This repository turns the concept into a
-production-style **analytics engineering project**: raw listening data goes in,
-a tested dimensional model and a personalised **top-5 playlist per listener**
-come out.
+**transparent, explainable score**. This repository turns it into a
+production-style **analytics engineering project** with dbt: a real music catalog
+and millions of listening events go in; a tested star schema, product analytics
+and a personalised **top-5 playlist per listener** come out.
 
 ```
 score = 0.5 × genre match  +  0.3 × listening history  +  0.2 × popularity
 ```
 
-Runs fully locally on [DuckDB](https://duckdb.org) — no warehouse account needed.
+Runs on **DuckDB** (local, free, zero setup) **and BigQuery** (dbt Cloud): every
+dialect-specific bit of SQL goes through adapter-dispatched macros.
 
 ---
 
-## ✨ Highlights
+## 📊 The data
 
-| | |
-|---|---|
-| **Layered architecture** | `raw → staging → intermediate → marts`, one schema per layer |
-| **Business logic as code** | The scoring formula is a reusable Jinja macro; weights, playlist size and event points are `vars` |
-| **Explainability** | Every recommendation ships with its three input scores and a human-readable reason |
-| **Cold-start handling** | Listeners with no history get the history weight redistributed instead of a silent 0 |
-| **Discovery mode** | Tracks already played or liked are excluded from recommendations |
-| **Incremental fact table** | `fct_listening_events` only processes new events on each run |
-| **Data quality** | 68 data tests, custom generic tests, singular business-rule tests and dbt **unit tests** |
-| **Reproducible data** | Deterministic Python generator with injected dirt (duplicates, casing, whitespace) |
-| **CI** | GitHub Actions runs `dbt build` on every push / PR |
+| Source | What | Volume |
+|---|---|---|
+| **Real** — [Spotify Tracks Dataset](https://huggingface.co/datasets/maharshipandya/spotify-tracks-dataset) (BSD) | Tracks, artists, albums, 114 genres, popularity, audio features (energy, valence, tempo…) | 114k rows → **89,740 tracks, 29,811 artists** |
+| **Simulated** on top of the real catalog | Listeners, onboarding answers, subscriptions, listening events | 10k users → **~4M events**, 507k sessions, 12.7k subscriptions |
+
+Listening behaviour is never published, so [`scripts/load_raw_data.py`](scripts/load_raw_data.py)
+simulates it with realistic dynamics: user growth and churn, heavy-tailed activity,
+commute & evening peaks, sessions, a popularity power law, heavy rotation, skips
+that depend on taste fit, and a freemium funnel (free → premium, cancellations).
+
+It also injects the **mess real pipelines receive**: duplicate deliveries,
+two timestamp formats from two SDK versions, inconsistent casing, logged-out
+events, events on tracks since removed from the catalog, and late-arriving
+offline plays (`ingested_at` days after `event_at`). The catalog itself repeats
+tracks once per genre and packs collaborators into `"Artist A;Artist B"` strings.
+
+Scale it up with `--users 50000` (~20M events) on a roomier machine.
 
 ---
 
-## 🧭 Lineage
+## 🧭 Architecture
 
 ```mermaid
 flowchart LR
-  subgraph raw[raw · seeds]
-    ru[raw_users]; ra[raw_artists]; rt[raw_tracks]; rg[raw_genres]
-    rp[raw_user_genre_preferences]; re[raw_listening_events]
+  subgraph raw[raw]
+    sp[(spotify_tracks<br/>real catalog)]
+    ev[(listening_events)]; us[(app_users)]; ob[(onboarding_prefs)]; sb[(subscriptions)]
   end
-
   subgraph stg[staging]
-    su[stg_users]; sa[stg_artists]; st[stg_tracks]; sg[stg_genres]
-    sp[stg_user_genre_preferences]; se[stg_listening_events]
+    t[tracks]; tg[track_genres]; ta[track_artists]; e[listening_events]; u[users]; p[prefs]; s[subscriptions]
   end
-
-  subgraph int[intermediate · the 3 signals]
-    gm[int_user_genre_match<br/><b>50% genre</b>]
-    eng[int_user_track_engagement]
-    ha[int_user_history_affinity<br/><b>30% history</b>]
-    pop[int_track_popularity<br/><b>20% popularity</b>]
-    cand[int_user_track_candidates]
+  subgraph int[intermediate]
+    sess[sessionized events]; eng[user × track engagement]
+    gm[genre match · 50%]; ha[history affinity · 30%]; pop[popularity · 20%]
+    cand[candidate retrieval]
   end
-
-  subgraph marts[marts]
-    du[dim_users]; dt[dim_tracks]; da[dim_artists]; dg[dim_genres]; fe[fct_listening_events]
-    fs[fct_recommendation_scores]
-    top[rpt_top_recommendations]
+  subgraph core[core · star schema]
+    dims[dim_tracks · dim_artists · dim_genres<br/>dim_users · dim_date · bridges]
+    facts[fct_listening_events ⟳<br/>fct_sessions · fct_subscriptions]
   end
-
-  ru-->su; ra-->sa; rt-->st; rg-->sg; rp-->sp; re-->se
-  sg-->st
-  sp-->gm; sg-->gm; su-->gm
-  se-->eng; eng-->ha; st-->ha; eng-->pop
-  su-->cand; st-->cand; eng-->cand
-  gm-->fs; ha-->fs; pop-->fs; cand-->fs; du-->fs
-  fs-->top; dt-->top
-  top-->app((MUSE app<br/>Top 5))
+  subgraph reco[recommendations]
+    fs[fct_recommendation_scores]; top[rpt_top_recommendations]
+  end
+  subgraph ana[analytics]
+    kpi[daily KPIs · cohort retention<br/>monthly revenue · context performance]
+  end
+  sp-->t & tg & ta; ev-->e; us-->u; ob-->p; sb-->s
+  e-->sess-->facts; e-->eng-->ha & pop
+  p-->gm; ha & gm & pop-->cand-->fs
+  t & ta-->dims; u & s-->dims; s-->facts
+  fs-->top-->app((MUSE app))
+  facts & dims-->kpi-->dash((dashboard))
 ```
 
----
+| Layer | Highlights |
+|---|---|
+| **staging** | Dedup at-least-once events, parse 2 timestamp formats, explode `;`-separated artists into a bridge, one row per track from a one-row-per-genre source |
+| **intermediate** | 30-minute-gap **sessionisation**, engagement points (play +1, repeat +2, like/playlist +3, skip −1), the three scoring signals, **two-stage recommender** (retrieval → scoring) |
+| **core** | Star schema with **many-to-many bridges** (track↔artist, track↔genre), conformed `dim_date`, user lifecycle (active / at-risk / churned), **incremental** event fact on *ingestion* time with a 3-day lookback for late arrivals |
+| **recommendations** | MUSE score for ~3M listener × candidate pairs, ranked; top-N playlist with a human-readable reason |
+| **analytics** | DAU / streams / skip rate / MRR per day, signup-cohort retention triangle, MRR by plan, recommendation-surface performance vs playlists / search / radio |
 
-## 🗂️ Data model
+### From pseudocode to SQL — a two-stage recommender
 
-| Layer | Model | Grain | What it does |
-|---|---|---|---|
-| staging | `stg_muse__*` | 1:1 with raw | Dedup events, normalise casing, map messy genre labels to the taxonomy |
-| intermediate | `int_user_genre_match` | user × genre | Declared genre = full affinity, same family (e.g. *Dream Pop* ↔ *Synth Pop*) = half |
-| intermediate | `int_user_track_engagement` | user × track | Engagement points: play +1, repeat +2, like +3, skip −1 |
-| intermediate | `int_user_history_affinity` | user × artist / genre | Engagement normalised 0–100 against the listener's own favourite |
-| intermediate | `int_track_popularity` | track | Percentile of distinct listeners (0–100) |
-| intermediate | `int_user_track_candidates` | user × track | Candidate pool (minus already-heard tracks) |
-| core | `dim_users`, `dim_tracks`, `dim_artists`, `dim_genres` | entity | Conformed dimensions, incl. `is_cold_start`, skip rate, favourite genres |
-| core | `fct_listening_events` | event | **Incremental** event fact with completion rate |
-| recommendations | `fct_recommendation_scores` | user × track | The three signals, final MUSE score and per-user rank |
-| recommendations | `rpt_top_recommendations` | user × rank | The top-N playlist with a `recommendation_reason` |
-| presentation | `presentation_top5` | rank | Reproduces the pitch-deck demo (slide 8) |
-
-### From pseudocode to SQL
-
-The original algorithm:
-
-```
-FOR each song IN songList
-    score ← 0.5 × genre + 0.3 × history + 0.2 × popularity
-sortedSongs ← MERGE_SORT_DESCENDING(songList, score)
-topFive ← FIRST MIN(5, LENGTH(sortedSongs)) songs
-```
-
-becomes, in `fct_recommendation_scores` / `rpt_top_recommendations`:
+Scoring every listener × every track would be 10k × 90k = **900M pairs**. Like
+production recommenders, MUSE first **retrieves** a few hundred plausible,
+unheard tracks per listener (top tracks of their genres, more from artists they
+love, global trending as the cold-start net), then **scores** only those:
 
 ```sql
 {{ muse_score('genre_match_score', 'listening_history_score', 'popularity_score') }} as recommendation_score,
 row_number() over (partition by user_id order by recommendation_score desc, popularity_score desc, track_id) as recommendation_rank
+```
+
+The deck's `O(n log n)` merge sort becomes the warehouse's sort inside a window
+function, run for every listener at once.
+
+```
+u_000042  1  How Much Is The Fish?   Scooter                  45.9  because you listen to Scooter
+u_000042  2  Paul Is Dead            Scooter;Timmy Trumpet    45.5  because you listen to Scooter
 ...
-where recommendation_rank <= {{ var('muse_top_n') }}
 ```
-
-The `O(n log n)` merge sort is delegated to the warehouse's sort inside the window function, and it now runs for **every listener at once** instead of one list at a time.
 
 ---
 
-## 🚀 Quickstart
-
-```bash
-git clone https://github.com/<your-username>/muse-dbt.git
-cd muse-dbt
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-dbt build --profiles-dir .          # seeds + models + tests
-dbt docs generate --profiles-dir . && dbt docs serve --profiles-dir .
-```
-
-See a listener's playlist:
-
-```bash
-dbt show --profiles-dir . --inline "select * from {{ ref('rpt_top_recommendations') }} where user_id = 'USR0021'"
-```
-
-Reproduce the deck's demo (Midnight Drive → 91.6):
-
-```bash
-dbt show --profiles-dir . -s presentation_top5
-```
-
-### Tune the algorithm without touching SQL
-
-```bash
-# Favour listening history over genre, return a top 10
-dbt build --profiles-dir . --vars '{muse_weight_genre: 0.3, muse_weight_history: 0.5, muse_top_n: 10}'
-```
-
-A singular test (`assert_scoring_weights_sum_to_one`) fails the build if the weights don't sum to 1.
-
----
-
-## ✅ Testing strategy
+## ✅ Data quality — 109 tests
 
 | Type | Examples |
 |---|---|
-| Generic (built-in) | `unique`, `not_null`, `accepted_values`, `relationships` on every key |
-| Generic (custom) | `score_between_0_and_100`, `unique_combination` (no package dependency) |
-| Singular | Weights sum to 1 · deck output reproduced exactly · no already-heard track recommended · every listener gets a full playlist |
-| Unit tests | Slide 5 worked example (`96×0.5 + 92×0.3 + 80×0.2 = 91.6`) · genre-family matching logic |
+| Generic | `unique`, `not_null`, `accepted_values`, `relationships` on every key |
+| Custom generic | `score_between_0_and_100`, `unique_combination` (dependency-free) |
+| Severity `warn` | Events on tracks removed from the catalog — monitored, not blocking |
+| Singular | Weights sum to 1 · deck demo reproduced exactly · no already-heard track recommended · every listener gets a full playlist · staging ↔ fact reconciliation · no overlapping subscriptions |
+| **Unit tests** | Slide 5 worked example (91.6) · 30-minute sessionisation rule · genre-family matching |
 
 ---
 
-## 🧪 Data
-
-All data is **synthetic and fictional**, generated by [`scripts/generate_seed_data.py`](scripts/generate_seed_data.py)
-(fixed random seed): 60 listeners (10 % cold-start), 25 artists, 120 tracks, 15 genres, ~3.3k listening events.
-To mimic real ingestion, it injects duplicate events, mixed-case event types / plans and whitespace in genre labels.
+## 🚀 Run it locally (DuckDB)
 
 ```bash
-python3 scripts/generate_seed_data.py   # regenerates seeds/*.csv
+git clone https://github.com/<your-username>/muse-dbt.git && cd muse-dbt
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r requirements-data.txt
+
+python scripts/load_raw_data.py        # downloads the catalog (20 MB) + simulates 10k listeners
+dbt build --profiles-dir .             # ~30 s: 31 models, 106 data tests, 3 unit tests
+dbt docs generate --profiles-dir . && dbt docs serve --profiles-dir .
 ```
 
+Tune the algorithm without touching SQL:
+
+```bash
+dbt build --profiles-dir . --vars '{muse_weight_genre: 0.3, muse_weight_history: 0.5, muse_top_n: 10}'
+```
+
+## ☁️ Run it on BigQuery / dbt Cloud
+
+```bash
+pip install -r requirements-bigquery.txt
+python scripts/load_to_bigquery.py --project <gcp-project> --credentials <service-account.json>
+```
+
+This loads the raw layer into a `raw` dataset (EU) with free load jobs. Then point
+a dbt Cloud BigQuery connection (location **EU**) at this repo. On the **BigQuery
+sandbox** (no billing, no DML) set the environment variable `DBT_BQ_SANDBOX=true`:
+the incremental fact is then rebuilt as a partitioned, clustered table.
+
+Cross-database macros live in [`macros/cross_db.sql`](macros/cross_db.sql)
+(timestamp parsing, string explode, date spine, date arithmetic…).
+
 ---
 
-## 🔭 Roadmap (from the MUSE deck)
+## 🔭 Roadmap
 
-- **Learn preferences** — fit weights per listener from skips, likes and repeats instead of fixed 50/30/20
-- **Add context** — time of day, activity or mood (with consent) as a fourth signal
-- **Improve discovery** — reserve playlist slots for new artists (diversity re-ranking)
-- **Snapshots** — track how a listener's taste evolves over time (`dbt snapshot` on genre preferences)
+- **Diversity re-ranking** — the sample above is all Scooter: cap tracks per artist in the top 5 (slide 10 "mix strong matches with new artists")
+- **Learned weights** — fit 50/30/20 per listener from skips and likes
+- **Context signal** — time of day / device as a fourth input
+- **Offline evaluation** — hold out the last month of listening, measure precision@5
+- **Snapshots** — `dbt snapshot` on onboarding preferences to track taste drift
 
 ---
 
-## 🛠️ Stack
-
-`dbt-core 1.10` · `dbt-duckdb` · `DuckDB` · `Python 3` · `GitHub Actions`
-
-*Project by Emma Larroze.*
+`dbt-core 1.10` · `DuckDB` · `BigQuery` · `Python` · `GitHub Actions` — *Project by Emma Larroze.*

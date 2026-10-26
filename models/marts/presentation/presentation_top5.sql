@@ -27,5 +27,6 @@ select
     row_number() over (order by recommendation_score desc, track_title) as recommendation_rank,
     *
 from scored
-qualify recommendation_rank <= {{ var('muse_top_n') }}
+where true
+qualify row_number() over (order by recommendation_score desc, track_title) <= {{ var('muse_top_n') }}
 order by recommendation_rank

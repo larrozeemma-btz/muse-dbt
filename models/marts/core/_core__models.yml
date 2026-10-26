@@ -1,50 +1,111 @@
 version: 2
 
 models:
+  - name: dim_date
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+
   - name: dim_genres
-    description: Genre taxonomy.
+    description: The 114 Spotify genres with their family and catalog size.
     columns:
       - name: genre_name
         data_tests: [unique, not_null]
 
   - name: dim_artists
-    description: One row per artist, with catalog size.
+    description: One row per artist (derived from track credits), with catalog and in-app stats.
     columns:
       - name: artist_id
         data_tests: [unique, not_null]
+      - name: artist_name
+        data_tests: [not_null]
 
   - name: dim_tracks
-    description: One row per track, enriched with artist, genre family and popularity metrics.
+    description: One row per track — catalog metadata, audio features, mood and popularity.
     columns:
       - name: track_id
         data_tests: [unique, not_null]
+      - name: primary_artist_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_artists')
+                field: artist_id
+      - name: genre_family
+        data_tests: [not_null]
       - name: popularity_score
-        description: 0–100 percentile of distinct listeners (the MUSE popularity signal).
         data_tests: [not_null, score_between_0_and_100]
 
+  - name: bridge_track_artists
+    description: Many-to-many track ↔ artist, with billing order (features, collaborations).
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["track_id", "artist_id"]
+    columns:
+      - name: artist_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_artists')
+                field: artist_id
+
+  - name: bridge_track_genres
+    description: Many-to-many track ↔ genre.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["track_id", "genre_name"]
+    columns:
+      - name: genre_name
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_genres')
+                field: genre_name
+
   - name: dim_users
-    description: One row per listener with listening stats and cold-start flag.
+    description: One row per listener — demographics, plan, lifetime listening, lifecycle status.
     columns:
       - name: user_id
         data_tests: [unique, not_null]
-      - name: is_cold_start
-        description: True when the listener has never completed a play (no history signal available).
+      - name: lifecycle_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["active", "at_risk", "churned", "never_active"]
+      - name: current_plan
         data_tests: [not_null]
 
   - name: fct_listening_events
-    description: Incremental, event-grain fact table of listening activity.
+    description: Incremental (on ingestion time) event-grain fact table with session and engagement points.
     columns:
       - name: event_id
         data_tests: [unique, not_null]
+      - name: session_id
+        data_tests: [not_null]
       - name: user_id
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_users')
                 field: user_id
-      - name: track_id
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_tracks')
-                field: track_id
+      - name: is_orphan_track
+        description: True when the track was removed from the catalog after the event.
+
+  - name: fct_sessions
+    description: One row per listening session (30-minute inactivity rule).
+    columns:
+      - name: session_id
+        data_tests: [unique, not_null]
+      - name: skip_rate
+        description: Null for sessions made only of engagement events.
+
+  - name: fct_subscriptions
+    description: Subscription periods with plan transitions and revenue to date.
+    columns:
+      - name: subscription_id
+        data_tests: [unique, not_null]
+      - name: revenue_eur
+        data_tests: [not_null]

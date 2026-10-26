@@ -1,26 +1,24 @@
+{{ config(materialized='table') }}
+
 {#
-    Engagement points a listener has given to each track they interacted with.
-    Points per event type are configured in the `muse_event_points` var
-    (play +1, repeat +2, like +3, skip -1) — the "skips, likes and repeats"
-    feedback loop from slide 10.
+    Engagement per listener × track — the raw material of the history signal.
+    Points per event type come from the `muse_event_points` var
+    (play +1, repeat +2, like +3, add_to_playlist +3, skip -1): slide 10's
+    "adjust based on skips, likes and repeats".
 #}
-
-with events as (
-
-    select * from {{ ref('stg_muse__listening_events') }}
-
-)
 
 select
     user_id,
     track_id,
-    count(*)                                            as n_events,
-    count(*) filter (where event_type = 'play')         as n_plays,
-    count(*) filter (where event_type = 'skip')         as n_skips,
-    count(*) filter (where event_type = 'like')         as n_likes,
-    count(*) filter (where event_type = 'repeat')       as n_repeats,
-    sum({{ event_points('event_type') }})               as engagement_points,
-    min(event_at)                                       as first_listened_at,
-    max(event_at)                                       as last_listened_at
-from events
+    sum(case when event_type = 'play' then 1 else 0 end)             as n_plays,
+    sum(case when event_type = 'skip' then 1 else 0 end)             as n_skips,
+    sum(case when event_type = 'like' then 1 else 0 end)             as n_likes,
+    sum(case when event_type = 'add_to_playlist' then 1 else 0 end)  as n_playlist_adds,
+    sum(case when event_type = 'repeat' then 1 else 0 end)           as n_repeats,
+    sum(case when is_stream then ms_played end)                 as ms_listened,
+    sum({{ event_points('event_type') }})                   as engagement_points,
+    min(event_at)                                           as first_listened_at,
+    max(event_at)                                           as last_listened_at
+from {{ ref('stg_muse__listening_events') }}
+where track_id in (select track_id from {{ ref('stg_spotify__tracks') }})
 group by 1, 2

@@ -1,0 +1,113 @@
+version: 2
+
+models:
+  - name: stg_spotify__tracks
+    description: One row per Spotify track with audio features.
+    columns:
+      - name: track_id
+        data_tests: [unique, not_null]
+      - name: spotify_popularity
+        data_tests: [not_null, score_between_0_and_100]
+      - name: primary_genre
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('genre_families')
+                field: genre_name
+
+  - name: stg_spotify__track_genres
+    description: Track ↔ genre membership (many-to-many).
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["track_id", "genre_name"]
+    columns:
+      - name: genre_name
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('genre_families')
+                field: genre_name
+
+  - name: stg_spotify__track_artists
+    description: Track ↔ artist membership (many-to-many), exploded from the `;`-separated artist string.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["track_id", "artist_id"]
+    columns:
+      - name: artist_id
+        data_tests: [not_null]
+      - name: track_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_spotify__tracks')
+                field: track_id
+
+  - name: stg_muse__users
+    columns:
+      - name: user_id
+        data_tests: [unique, not_null]
+      - name: country_code
+        data_tests: [not_null]
+
+  - name: stg_muse__user_genre_preferences
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_id", "genre_name"]
+    columns:
+      - name: affinity
+        data_tests: [not_null, score_between_0_and_100]
+      - name: genre_name
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('genre_families')
+                field: genre_name
+
+  - name: stg_muse__subscriptions
+    columns:
+      - name: subscription_id
+        data_tests: [unique, not_null]
+      - name: plan
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["free", "premium", "student", "family"]
+      - name: user_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_muse__users')
+                field: user_id
+
+  - name: stg_muse__listening_events
+    description: Deduplicated, parsed listening events (logged-out events removed).
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: event_at
+        description: Null would mean an unknown timestamp format slipped through.
+        data_tests: [not_null]
+      - name: event_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["play", "skip", "like", "add_to_playlist", "repeat"]
+      - name: user_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_muse__users')
+                field: user_id
+      - name: track_id
+        description: A handful of events reference tracks since removed from the catalog — monitored, not blocking.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_spotify__tracks')
+                field: track_id
+              config:
+                severity: warn

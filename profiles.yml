@@ -5,4 +5,16 @@ muse:
     dev:
       type: duckdb
       path: muse.duckdb
+      threads: 1
+      settings:
+        preserve_insertion_order: false   # lets DuckDB stream big sorts instead of buffering
+
+    # BigQuery — used to validate the SQL locally; dbt Cloud uses its own connection.
+    # Auth: `gcloud auth application-default login`, then set GCP_PROJECT.
+    bigquery:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT', 'your-gcp-project') }}"
+      dataset: dbt_dev
+      location: EU
       threads: 4

@@ -1,47 +1,55 @@
+{{ config(materialized='table') }}
+
 {#
     POPULARITY signal (20 % of the MUSE score).
 
-    A broad, listener-independent signal: tracks are ranked by how many
-    distinct listeners completed a play, and that rank is turned into a
-    0–100 percentile. Tracks nobody has played yet score 0.
+    Blends two views of "widely enjoyed":
+      - Spotify's global popularity (real, from the catalog)
+      - MUSE in-app reach: percentile of distinct listeners on the platform
+    Tracks nobody on MUSE has played rely on Spotify popularity alone.
 #}
 
-with engagement as (
+with tracks as (
 
-    select * from {{ ref('int_user_track_engagement') }}
-
-),
-
-tracks as (
-
-    select track_id from {{ ref('stg_muse__tracks') }}
+    select track_id, spotify_popularity from {{ ref('stg_spotify__tracks') }}
 
 ),
 
-listeners as (
+in_app as (
 
     select
         track_id,
-        count(distinct user_id) filter (where n_plays > 0)  as n_listeners,
+        count(distinct case when n_plays > 0 then user_id end)  as n_listeners,
         sum(n_plays)                                         as n_plays,
-        sum(n_likes)                                         as n_likes,
-        sum(n_skips)                                         as n_skips
-    from engagement
+        sum(n_skips)                                         as n_skips,
+        sum(n_likes)                                         as n_likes
+    from {{ ref('int_user_track_engagement') }}
     group by 1
+
+),
+
+ranked as (
+
+    select
+        *,
+        round(100 * percent_rank() over (order by n_listeners, n_likes), 1) as in_app_percentile
+    from in_app
+    where n_listeners > 0
 
 )
 
 select
     tracks.track_id,
-    coalesce(listeners.n_listeners, 0)  as n_listeners,
-    coalesce(listeners.n_plays, 0)      as n_plays,
-    coalesce(listeners.n_likes, 0)      as n_likes,
-    coalesce(listeners.n_skips, 0)      as n_skips,
+    tracks.spotify_popularity,
+    coalesce(in_app.n_listeners, 0)     as n_listeners,
+    coalesce(in_app.n_plays, 0)         as n_plays,
+    coalesce(in_app.n_skips, 0)         as n_skips,
+    coalesce(in_app.n_likes, 0)         as n_likes,
+    ranked.in_app_percentile,
     case
-        when coalesce(listeners.n_listeners, 0) = 0 then 0
-        else round(100 * percent_rank() over (
-            order by coalesce(listeners.n_listeners, 0), coalesce(listeners.n_likes, 0)
-        ), 1)
-    end as popularity_score
+        when ranked.in_app_percentile is null then tracks.spotify_popularity
+        else round(0.5 * tracks.spotify_popularity + 0.5 * ranked.in_app_percentile, 1)
+    end                                 as popularity_score
 from tracks
-left join listeners using (track_id)
+left join in_app using (track_id)
+left join ranked using (track_id)

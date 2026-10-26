@@ -7,3 +7,10 @@ logs/
 .user.yml
 __pycache__/
 .DS_Store
+data/
+muse.duckdb.tmp/
+
+# credentials — never commit
+*service-account*.json
+*-key.json
+keys/

@@ -3,10 +3,9 @@ version: 2
 models:
   - name: fct_recommendation_scores
     description: >
-      MUSE score for every listener × candidate track:
-      `0.5 × genre_match + 0.3 × listening_history + 0.2 × popularity`,
-      ranked per listener. Cold-start listeners get the history weight
-      redistributed over the two other signals.
+      MUSE score for every listener × retrieved candidate:
+      `0.5 × genre_match + 0.3 × listening_history + 0.2 × popularity`, ranked per listener.
+      Cold-start listeners get the history weight redistributed over the two other signals.
     data_tests:
       - unique_combination:
           arguments:
@@ -39,7 +38,6 @@ models:
                 to: ref('dim_users')
                 field: user_id
       - name: recommendation_rank
-        description: 1 = best match. Playlist length is checked by `assert_every_listener_gets_a_full_playlist`.
         data_tests: [not_null]
       - name: recommendation_reason
         data_tests: [not_null]
@@ -52,5 +50,18 @@ exposures:
     description: The personalised top-five playlist shown on the MUSE home screen.
     depends_on:
       - ref('rpt_top_recommendations')
+    owner:
+      name: Emma Larroze
+
+  - name: muse_business_dashboard
+    label: MUSE business dashboard
+    type: dashboard
+    maturity: medium
+    description: Daily KPIs, retention cohorts, revenue and recommendation performance.
+    depends_on:
+      - ref('rpt_daily_kpis')
+      - ref('rpt_cohort_retention')
+      - ref('rpt_monthly_revenue')
+      - ref('rpt_play_context_performance')
     owner:
       name: Emma Larroze
