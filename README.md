@@ -177,9 +177,18 @@ The same build gives identical marketing totals on both engines.
 
 `dbt-core 1.10` · `MetricFlow` · `DuckDB` · `BigQuery` · `dbt Cloud` · `Python` · `Chart.js` · `GitHub Actions`
 
-## How this was built
+## Why I built this, and how
 
-Emma Larroze designed the project, and it was built with
-[Claude Code](https://claude.com/claude-code) as a pair programmer. Commits are
-co-authored accordingly. The measurement design reflects her marketing analytics
-experience: what to measure, how to define it, and which trade-offs to show.
+I built MUSE to show how I approach marketing measurement. Start with the
+questions leadership actually asks. Agree on the definitions before anyone
+builds a chart. Then build the models and tests that make the numbers
+trustworthy enough to make decisions with.
+
+The measurement choices are mine, and they come from my marketing analytics
+experience: which attribution models to compare, how strict an MQL should be,
+why sourced and influenced pipeline belong side by side, and what the
+dashboard should *not* let you sum. I built it with
+[Claude Code](https://claude.com/claude-code) as a pair programmer, which let
+me move fast on the engineering. The commits are co-authored to say so.
+
+— Emma Larroze

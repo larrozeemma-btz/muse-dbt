@@ -1,31 +1,42 @@
-# Marketing measurement memo: where last-touch reporting misleads us
+# Where last-touch reporting misleads us
 
-*Period: July 2025 to September 2026 · Source: `marketing` marts in this
-project · Data is simulated (see README), so the numbers illustrate the
-method and are not real results.*
+*Emma Larroze · Period: July 2025 to September 2026 · Source: the `marketing`
+marts in this project. The data is simulated (see README), so read the numbers
+as a demonstration of the method, not as real results.*
 
-## TL;DR
+## Why I wrote this
 
-1. **Last-touch reporting would cut our two cheapest demand creators.**
-   Content and paid search open about 33 % of signup journeys but get **0 %**
-   of last-touch credit. Under last-touch, paid search costs **$35k per signup**.
-   Under position-based it costs **$841**.
-2. **Retargeting looks great, but nothing proves it adds signups we would not
-   have had anyway.** The Meta retargeting campaign gets 7 to 19 % of all signup
-   credit depending on the model. Run a 4-week audience holdout before raising
-   its budget.
-3. **In enterprise, content downloads fill the MQL queue but not the pipeline.**
-   They are 17 % of leads but bring **$20 of bookings per lead**, against **$1,906** for
-   partner referrals. Tighten the MQL rule for content leads and move the
-   capacity freed up to the partner program.
-4. **LinkedIn ABM and webinars are judged on the wrong number.** On *sourced*
-   pipeline, LinkedIn returns $1.1 per dollar spent. On *influenced* pipeline it returns
-   $13. Webinars influence $69 of pipeline per dollar. Report both and set
-   targets on influenced pipeline for these two programs.
+Every attribution model tells a slightly different story, and that's fine, as
+long as we know which story we're reading. When I put all five models side by
+side, one pattern jumped out: the channels that *start* customer journeys almost
+disappear under last-touch. If we planned budget on last-touch alone, we'd cut
+the things that bring people to us in the first place.
 
-## 1. Attribution models disagree most on demand creation
+Here's what the data shows, what I'd change, and what I'd test before moving a
+single dollar.
 
-Share of signup credit by channel (Jul 2025 to Sep 2026):
+## The short version
+
+1. **Last-touch would have us cut our two cheapest demand creators.**
+   Content and paid search open a third of all signup journeys and get **zero**
+   last-touch credit. Under last-touch, paid search costs **$35k per signup**.
+   Under position-based it costs **$841**. Same spend, same signups, a 40×
+   different story.
+2. **Retargeting looks like a star. That's exactly why I'd test it.**
+   It gets 7 to 19 % of all signup credit depending on the model. Credit isn't
+   proof, though. I'd run a four-week holdout before giving it more budget.
+3. **Content downloads fill the MQL queue, not the pipeline.**
+   They're 17 % of our leads but bring **$20 of bookings per lead**, against
+   **$1,906** for partner referrals. That isn't marketing versus sales. It's a
+   definition problem, and definitions can be fixed.
+4. **We're judging ABM and webinars on the wrong number.**
+   On sourced pipeline, LinkedIn ABM returns $1.1 per dollar. On influenced
+   pipeline it returns $13. Webinars influence $69 per dollar. Both numbers
+   belong in the review, side by side.
+
+## 1. The models disagree most about who creates demand
+
+Share of signup credit by channel, July 2025 to September 2026:
 
 | Channel | First touch | Last touch | Linear | Position-based | Time decay |
 |---|---:|---:|---:|---:|---:|
@@ -36,7 +47,7 @@ Share of signup credit by channel (Jul 2025 to Sep 2026):
 | Referral | 9.2 % | 14.9 % | 8.5 % | 10.4 % | 9.2 % |
 | Direct | 6.3 % | 37.5 % | 19.3 % | 20.6 % | 24.5 % |
 
-Cost per credited signup, last 12 months:
+What it costs us to get one signup, last 12 months:
 
 | Paid channel | First touch | Last touch | Position-based | Time decay |
 |---|---:|---:|---:|---:|
@@ -45,24 +56,28 @@ Cost per credited signup, last 12 months:
 | Paid social | $443 | $363 | $352 | $286 |
 | Paid search | $460 | **$35,477** | $841 | $1,113 |
 
-**Why:** journeys usually start with a podcast, an article or a search ad, and
-end with a direct visit or a retargeting ad. Last touch hands the whole
-conversion to that final step.
+**What's going on.** A typical journey starts with a podcast, an article or a
+search ad, and ends with a direct visit or a retargeting ad. Last-touch hands
+the entire conversion to that final click, so everything that happened before
+it simply vanishes.
 
-**Recommendation:** use position-based as the planning default, always shown
-next to first and last touch (dashboard, *Attribution* tab). Do not cut content
-or paid search on last-touch numbers.
+**What I'd do.** Make position-based our planning default, and always show it
+next to first and last touch so nobody has to take one model on faith. That's
+how the dashboard's *Attribution* view is built. And no channel gets cut on
+last-touch numbers alone.
 
-## 2. Test retargeting's incrementality before scaling it
+## 2. Retargeting: test before we scale
 
-The Meta retargeting campaign shows up right before conversion in about a third
-of journeys. Every model credits it, but credit is not incrementality: it
-mostly reaches people who were already about to sign up.
+Retargeting shows up right before people sign up in about a third of journeys,
+and every model rewards it for that. That's what makes me cautious. It mostly
+reaches people who were already about to convert, so the real question isn't
+"does it get credit?" but "would these people have signed up anyway?"
 
-**Recommendation:** hold out 10 % of the retargeting audience for four weeks and
-compare signup rates. Keep the budget flat until then.
+**What I'd do.** Hold out 10 % of the retargeting audience for four weeks and
+compare signup rates. Keep the budget flat until we know. Four weeks of
+patience is cheaper than six months scaling something we can't prove works.
 
-## 3. Content-download leads: high volume, low value
+## 3. Content-download leads: lots of volume, very little value
 
 | Lead source | Leads | Lead to MQL | Win rate | Bookings per lead |
 |---|---:|---:|---:|---:|
@@ -72,13 +87,18 @@ compare signup rates. Keep the budget flat until then.
 | Webinar | 625 | 58 % | 22 % | $296 |
 | Content download | 679 | 31 % | 17 % | **$20** |
 
-**Recommendation:**
-- Content-download leads become MQLs only after a second high-intent action:
-  a demo-page visit or a webinar attended. Until then they stay in nurture.
-- Partner referrals are the most efficient source, with the fastest path to a
-  win. Grow the reseller program before adding events.
+On a dashboard, a full MQL queue looks like success. But sales development
+spends the same time on a content-download MQL as on a demo request, and the
+two are worth wildly different amounts.
 
-## 4. Sourced vs influenced pipeline
+**What I'd do.**
+- A content download alone shouldn't make someone an MQL. Wait for a second
+  high-intent signal, like a demo-page visit or a webinar attended, and keep
+  everyone else in nurture.
+- Partner referrals convert best and close fastest. I'd grow the reseller
+  program before adding another event to the calendar.
+
+## 4. Sourced and influenced pipeline: show both
 
 | Enterprise channel | Spend | Sourced pipeline per $ | Influenced pipeline per $ |
 |---|---:|---:|---:|
@@ -88,18 +108,23 @@ compare signup rates. Keep the budget flat until then.
 | Events | $85k | $13.2 | $21.4 |
 | LinkedIn ABM (paid social) | $212k | **$1.1** | $13.1 |
 
-LinkedIn ABM and webinars rarely create the lead, but they show up in most
-deals before the opportunity exists. Judged on sourced pipeline alone, they
-would be cut.
+I always report these two together, because each one alone tells a half-truth.
+Sourced pipeline undersells programs like ABM and webinars, which rarely create
+a lead but show up in most deals before the opportunity exists. Influenced
+pipeline gives them their due, but it adds up to more than 100 %, so it can
+never be summed across channels.
 
-**Recommendation:** report sourced and influenced pipeline side by side in the
-weekly review. For programs meant to accelerate deals (ABM, webinars), set
-targets on influenced pipeline and opportunity velocity.
+**What I'd do.** Put both in the weekly review. For programs designed to
+accelerate deals, set targets on influenced pipeline and deal velocity, not on
+sourced pipeline.
 
-## Data caveats
+## What this analysis can't tell us
 
-- 12 % of paid conversions have **no** marketing touch in the 30-day window
-  (upgrades happen long after signup). Attribute marketing to signups and treat
-  the upgrade to paid as a product metric.
-- Spend excludes salaries and tooling, so all CACs here are media CACs.
-- Influenced pipeline adds up to more than 100 %. Never sum it across channels.
+Being clear about the limits is part of what makes the numbers trustworthy:
+
+- **12 % of paid upgrades have no marketing touch** in the 30-day window,
+  because people upgrade long after they sign up. So I attribute marketing to
+  signups and treat the upgrade to paid as a product metric.
+- **These are media CACs.** Spend excludes salaries and tooling.
+- **No attribution model measures incrementality.** That's what holdout tests
+  are for, and why I'd run one before any budget shift above 20 %.

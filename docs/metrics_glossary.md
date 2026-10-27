@@ -1,10 +1,18 @@
 # MUSE marketing metrics glossary
 
-One definition per metric, agreed with marketing, sales, sales development and
-finance. The executable definitions live in
-[`models/marts/marketing/_semantic_layer.yml`](../models/marts/marketing/_semantic_layer.yml);
-this page explains them in plain language. Any change goes through a pull
-request reviewed by the metric owner.
+**Before the numbers, the words.** Most dashboard debates aren't really about
+data. They're about definitions. Two teams look at "MQLs" or "pipeline", see
+different numbers, and lose a meeting arguing about which one is right.
+
+So every metric here has one definition, one owner, and a *watch out for*
+column. The caveats are usually where trust is won or lost, which is why they
+sit right next to the definition instead of in a footnote.
+
+The executable versions live in the
+[semantic layer](../models/marts/marketing/_semantic_layer.yml). This page
+explains them in plain language. Changing a definition goes through a pull
+request reviewed by the metric's owner, so nobody wakes up to a number that
+quietly moved.
 
 | Metric | Definition | Grain & timing | Owner | Watch out for |
 |---|---|---|---|---|
@@ -26,8 +34,9 @@ request reviewed by the metric owner.
 
 ## Attribution models
 
-All five are computed for every conversion so their differences are visible,
-not debated in the abstract:
+There's no "right" attribution model, only models that answer different
+questions. That's why I compute all five for every conversion: the
+differences are visible instead of debated in the abstract.
 
 | Model | Credit | Good for | Bias |
 |---|---|---|---|
@@ -37,9 +46,11 @@ not debated in the abstract:
 | Position-based (U-shape) | 40 % first, 40 % last, 20 % middle | Balancing creation and capture | The 40/20/40 split is a convention, not a measurement |
 | Time decay (7-day half-life) | Halves every 7 days before conversion | Short consideration cycles | Penalises awareness channels in long journeys |
 
-**Default for planning:** position-based, with first and last touch shown
-alongside. **None of them measures incrementality.** Budget shifts above
-20 % of a channel need a holdout test (geo or audience split) first.
+**My default for planning:** position-based, with first and last touch always
+shown alongside it. And one thing to keep in mind: **none of these models
+measures incrementality.** They tell us who was there, not who made the
+difference. Before shifting more than 20 % of a channel's budget, I'd run a
+holdout test (geo or audience split) first.
 
 Lookback windows: 30 days before a PLG conversion, 365 days before an
 enterprise opportunity.
