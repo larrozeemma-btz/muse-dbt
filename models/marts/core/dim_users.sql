@@ -85,7 +85,7 @@ select
     coalesce(listening.lifetime_hours, 0)                   as lifetime_hours,
     listening.first_listened_at,
     listening.last_listened_at,
-    -- slide 9 "cold start": no listening history to learn from yet
+    -- "cold start": no listening history to learn from yet
     coalesce(listening.lifetime_plays, 0) = 0               as is_cold_start,
     case
         when listening.last_listened_at is null                                  then 'never_active'

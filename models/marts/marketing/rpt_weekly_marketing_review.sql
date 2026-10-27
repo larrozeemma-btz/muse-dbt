@@ -16,7 +16,9 @@ with weeks as (
 spend as (
 
     select {{ date_add_days('spend_date', '1 - (' ~ iso_day_of_week('spend_date') ~ ')') }} as week_start,
-           sum(spend_usd) as spend_usd
+           sum(spend_usd)                                                       as spend_usd,
+           sum(case when motion = 'plg' then spend_usd else 0 end)              as plg_spend_usd,
+           sum(case when motion = 'enterprise' then spend_usd else 0 end)       as enterprise_spend_usd
     from {{ ref('fct_ad_spend') }}
     group by 1
 
@@ -51,6 +53,8 @@ weekly as (
     select
         weeks.week_start,
         coalesce(spend.spend_usd, 0)                    as spend_usd,
+        coalesce(spend.plg_spend_usd, 0)                as plg_spend_usd,
+        coalesce(spend.enterprise_spend_usd, 0)         as enterprise_spend_usd,
         coalesce(conversions.signups, 0)                as signups,
         coalesce(conversions.paid_conversions, 0)       as paid_conversions,
         coalesce(leads.new_leads, 0)                    as new_leads,
@@ -66,8 +70,11 @@ weekly as (
 
 select
     *,
-    round(spend_usd / nullif(paid_conversions, 0), 2)                                       as blended_cac_usd,
-    round(spend_usd / nullif(signups, 0), 2)                                                as cost_per_signup_usd,
+    -- each motion's spend is divided by that motion's outcomes: enterprise events
+    -- and ABM never inflate the consumer CAC, and vice versa
+    round(plg_spend_usd / nullif(paid_conversions, 0), 2)                                   as blended_cac_usd,
+    round(plg_spend_usd / nullif(signups, 0), 2)                                            as cost_per_signup_usd,
+    round(pipeline_created_usd / nullif(enterprise_spend_usd, 0), 2)                        as pipeline_per_enterprise_dollar,
     round((signups - lag(signups) over (order by week_start))
           / nullif(lag(signups) over (order by week_start), 0), 3)                          as signups_wow,
     round((spend_usd - lag(spend_usd) over (order by week_start))

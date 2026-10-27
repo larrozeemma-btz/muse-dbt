@@ -16,7 +16,7 @@ everyone agrees on, and the dashboard the weekly review reads.
 | 📊 **Dashboard** | [Weekly marketing review](https://larrozeemma-btz.github.io/muse-dbt/), built from the marts |
 | 📖 **Metric definitions** | [Metrics glossary](docs/metrics_glossary.md) + [semantic layer](models/marts/marketing/_semantic_layer.yml) |
 | 💡 **Insights** | [Memo: where last-touch reporting misleads us](docs/insights_memo.md) |
-| 🧪 **Quality** | 173 data tests, 4 unit tests, CI on every push, identical results on DuckDB and BigQuery |
+| 🧪 **Quality** | 170 data tests, 3 unit tests, CI on every push, identical results on DuckDB and BigQuery |
 
 ---
 
@@ -35,8 +35,8 @@ everyone agrees on, and the dashboard the weekly review reads.
 ### Example finding
 
 Content and paid search open **33 %** of signup journeys but receive **0 %** of
-last-touch credit. Under last-touch, paid search costs **$35k per signup**.
-Under position-based it costs **$841**. Full analysis and recommendations
+last-touch credit. Under last-touch, paid search costs **$4,040 per signup**.
+Under position-based it costs **$115**. Full analysis and recommendations
 in the [insights memo](docs/insights_memo.md).
 
 ---
@@ -68,7 +68,7 @@ flowchart LR
     an[analytics<br/>retention · revenue · KPIs]
     reco[recommendations]
   end
-  sl[[semantic layer<br/>8 governed metrics]]
+  sl[[semantic layer<br/>10 governed metrics]]
   dash((dashboard))
   web & ads & sf & app & cat --> s1
   s1 --> ch --> tp
@@ -86,7 +86,9 @@ flowchart LR
   Marketing ops can change it without touching SQL. Unmapped traffic is reported and tested (warn above 2 %), never silently lumped into "other".
 - **Identity stitching**: anonymous visits are credited to a user once a session carries both the cookie and the user id.
 - **All five attribution models are computed**, in long format, so a sixth is one more `union`. Every model's credit sums to 100 % per conversion (tested).
-- **Attribution is measured on signups**, and the paid upgrade is treated as a product metric. 12 % of upgrades have no marketing touch in the 30-day window, and the coverage report says so.
+- **Attribution is measured on signups**, and the paid upgrade is treated as a product metric. 47 % of upgrades have no marketing touch in the 30-day window, and the coverage report says so.
+- **Funnels are strictly nested** (tested): only activated users count as the paid step, and users who pay without activating are reported separately.
+- **Each motion's spend is divided by its own outcomes**: consumer spend by signups and paid conversions, enterprise spend by pipeline.
 - **Sourced and influenced pipeline are reported side by side.** Judged on sourced pipeline alone, deal-acceleration programs (ABM, webinars) look worthless.
 - **Spend is converted to USD at finance's planning rate** (`muse_eur_to_usd` var), and the reporting layer reconciles to the platforms' exports to the cent (tested).
 - **Reports stop at the last complete week**, so a half-loaded week never reads as a collapse.
@@ -98,9 +100,9 @@ flowchart LR
 | Source | Real or simulated | Volume |
 |---|---|---|
 | Music catalog: [Spotify Tracks Dataset](https://huggingface.co/datasets/maharshipandya/spotify-tracks-dataset) (BSD) | **Real** | 89,740 tracks, 29,811 artists, 114 genres |
-| App users, subscriptions, listening events | Simulated | 10k users, ~4M events, 12.7k subscriptions |
-| Web sessions with UTMs, ad platform spend | Simulated | 91k sessions, 8.8k spend rows, $2.5M spend |
-| Salesforce Leads, Opportunities, Campaign members | Simulated | 4k leads, 616 opportunities, 7.7k campaign responses |
+| App users, subscriptions, listening events | Simulated | 10k users, ~4M events, 11.7k subscriptions |
+| Web sessions with UTMs, ad platform spend | Simulated | 282k sessions, 8.8k spend rows, $783k spend ($280k consumer, $503k enterprise) |
+| Salesforce Leads, Opportunities, Campaign members | Simulated | 4k leads, 611 opportunities, 7.7k campaign responses |
 
 Go-to-market data is never public, so [`scripts/load_marketing_data.py`](scripts/load_marketing_data.py)
 simulates it with the patterns that make attribution hard in real life: content
@@ -127,8 +129,9 @@ and late-arriving offline events.
 
 ### Semantic layer
 
-Eight governed metrics (`marketing_spend`, `signups`, `paid_conversions`,
-`pipeline_created`, `closed_won_bookings`, `blended_cac`, `cost_per_signup`,
+Ten governed metrics (`marketing_spend`, `consumer_marketing_spend`,
+`enterprise_marketing_spend`, `signups`, `paid_conversions`, `pipeline_created`,
+`closed_won_bookings`, `blended_cac`, `cost_per_signup`,
 `pipeline_per_marketing_dollar`) are defined once in MetricFlow and validated
 against the warehouse:
 
@@ -191,4 +194,4 @@ dashboard should *not* let you sum. I built it with
 [Claude Code](https://claude.com/claude-code) as a pair programmer, which let
 me move fast on the engineering. The commits are co-authored to say so.
 
-— Emma Larroze
+Emma Larroze

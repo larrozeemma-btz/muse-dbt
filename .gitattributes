@@ -1,0 +1,2 @@
+# Count dbt SQL in the repository language stats (GitHub ignores .sql by default)
+*.sql linguist-detectable=true

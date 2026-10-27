@@ -46,7 +46,7 @@ MUSE_RECO_LAUNCH = datetime(2025, 6, 1)  # in-app recommendations go live
 COUNTRIES = ["FR", "US", "GB", "DE", "ES", "BR", "MX", "CA", "IT", "BE", "SE", "JP", "IN", "AU"]
 COUNTRY_W = [18, 20, 9, 8, 6, 8, 5, 4, 5, 3, 2, 4, 5, 3]
 PLANS = {"free": 0.0, "premium": 10.99, "student": 5.99, "family": 17.99}
-PLAN_W = [0.60, 0.28, 0.08, 0.04]
+PLAN_W = [0.993, 0.005, 0.0015, 0.0005]  # nearly everyone starts free
 DEVICES = ["mobile", "desktop", "web", "smart_speaker", "tv"]
 DEVICE_W = [0.65, 0.18, 0.09, 0.05, 0.03]
 CHANNELS = ["organic", "paid_social", "referral", "app_store_search", "partnership"]
@@ -166,7 +166,9 @@ def simulate(con, n_users, seed):
         t = signup_s[u]
         while t < last_active_s[u]:
             if plan == "free":
-                nxt = t + int(rng.exponential(75 * 86400)) if rng.random() < 0.30 else horizon + 1
+                # heavier listeners are likelier to upgrade, and upgrades take months, not days
+                p_upgrade = float(np.clip(0.004 + 0.11 * sessions_per_week[u] ** 1.5, 0.004, 0.7))
+                nxt = t + int(rng.exponential(90 * 86400)) if rng.random() < p_upgrade else horizon + 1
                 next_plan = rng.choice(["premium", "student", "family"], p=[0.75, 0.17, 0.08])
             else:
                 nxt = t + int(rng.exponential(220 * 86400)) if rng.random() < 0.35 else horizon + 1

@@ -3,8 +3,8 @@
 {#
     Engagement per listener × track — the raw material of the history signal.
     Points per event type come from the `muse_event_points` var
-    (play +1, repeat +2, like +3, add_to_playlist +3, skip -1): slide 10's
-    "adjust based on skips, likes and repeats".
+    (play +1, repeat +2, like +3, add_to_playlist +3, skip -1), so the history
+    signal learns from skips, likes and repeats.
 #}
 
 select

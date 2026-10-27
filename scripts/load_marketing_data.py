@@ -39,17 +39,17 @@ B2B_LAUNCH = datetime(2025, 1, 6)
 # --------------------------------------------------------------------------- campaigns
 # (campaign_code, channel, motion, ad platform or None, daily budget USD, start, end)
 CAMPAIGNS = [
-    ("gg_brand_search",      "paid_search",  "plg",        "google_ads", 260, "2024-01-01", None),
-    ("gg_generic_search",    "paid_search",  "plg",        "google_ads", 420, "2024-03-01", None),
-    ("bing_search",          "paid_search",  "plg",        "microsoft_ads", 60, "2024-06-01", None),
-    ("meta_prospecting",     "paid_social",  "plg",        "meta_ads",   520, "2024-01-01", None),
-    ("meta_retargeting",     "paid_social",  "plg",        "meta_ads",   310, "2024-02-01", None),
-    ("tiktok_creators",      "paid_social",  "plg",        "tiktok_ads", 380, "2025-03-01", None),
-    ("podcast_sponsorships", "content",      "plg",        "podcast_network", 240, "2024-05-01", None),
+    ("gg_brand_search",      "paid_search",  "plg",        "google_ads", 35, "2024-01-01", None),
+    ("gg_generic_search",    "paid_search",  "plg",        "google_ads", 60, "2024-03-01", None),
+    ("bing_search",          "paid_search",  "plg",        "microsoft_ads", 8, "2024-06-01", None),
+    ("meta_prospecting",     "paid_social",  "plg",        "meta_ads",   70, "2024-01-01", None),
+    ("meta_retargeting",     "paid_social",  "plg",        "meta_ads",   40, "2024-02-01", None),
+    ("tiktok_creators",      "paid_social",  "plg",        "tiktok_ads", 50, "2025-03-01", None),
+    ("podcast_sponsorships", "content",      "plg",        "podcast_network", 30, "2024-05-01", None),
     ("blog_seo",             "organic_search", "plg",      None, 0, "2024-01-01", None),
     ("weekly_newsletter",    "email",        "plg",        None, 0, "2024-01-01", None),
     ("invite_a_friend",      "referral",     "plg",        None, 0, "2024-01-01", None),
-    ("telco_bundle",         "partnership",  "plg",        "partner_fees", 150, "2024-09-01", None),
+    ("telco_bundle",         "partnership",  "plg",        "partner_fees", 20, "2024-09-01", None),
     ("b2b_linkedin_abm",     "paid_social",  "enterprise", "linkedin_ads", 330, "2025-01-06", None),
     ("b2b_google_search",    "paid_search",  "enterprise", "google_ads", 180, "2025-01-06", None),
     ("b2b_webinar_series",   "webinar",      "enterprise", "event_costs", 70, "2025-02-01", None),
@@ -193,7 +193,8 @@ def main():
                 add_session(anon, u.user_id, later, pick(rng, {"direct": .6, "email": .3, "organic_search": .1}))
 
     # visitors who never sign up (the top of the funnel)
-    for _ in range(len(users) * 3):
+    # most visitors never sign up: ~15 anonymous browsers per account keeps visit→signup in the single digits
+    for _ in range(len(users) * 15):
         anon = f"a_{rng.integers(1e12):012d}"
         first = pd.Timestamp("2024-01-01") + timedelta(seconds=float(rng.uniform(0, (SIM_END - datetime(2024, 1, 1)).total_seconds())))
         add_session(anon, None, first, pick(rng, PLG_FIRST_TOUCH))

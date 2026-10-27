@@ -1,5 +1,5 @@
 {#
-    MUSE recommendation score (slide 4–6):
+    MUSE recommendation score:
         score = 0.5 × genre + 0.3 × history + 0.2 × popularity
 
     Weights come from project vars so they can be tuned without touching SQL:
@@ -15,7 +15,7 @@
 
 
 {#
-    Cold-start variant: the listener has no history yet (slide 9 limitation),
+    Cold-start variant: the listener has no history yet,
     so the history weight is redistributed proportionally across the two
     remaining signals instead of silently scoring history as 0.
 #}

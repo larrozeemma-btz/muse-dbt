@@ -52,7 +52,9 @@ models:
         data_tests: [not_null]
 
   - name: rpt_plg_funnel
-    description: Visitor → signup → activated → paid (90 days), by first-visit month and first-touch channel.
+    description: >
+      Visitor → signup → activated → paid within 90 days, by first-visit month and first-touch channel.
+      Strictly nested stages; payers who never activated are counted in `paid_without_activation`.
     data_tests:
       - unique_combination:
           arguments:

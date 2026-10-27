@@ -82,6 +82,22 @@ metrics:
     type_params:
       measure: spend_usd
 
+  - name: consumer_marketing_spend
+    label: Consumer marketing spend (USD)
+    description: Paid media for the product-led motion only.
+    type: simple
+    type_params:
+      measure: spend_usd
+    filter: "{{ Dimension('spend__motion') }} = 'plg'"
+
+  - name: enterprise_marketing_spend
+    label: Enterprise marketing spend (USD)
+    description: Paid programs for MUSE for Business (ABM, B2B search, events, webinars, partners).
+    type: simple
+    type_params:
+      measure: spend_usd
+    filter: "{{ Dimension('spend__motion') }} = 'enterprise'"
+
   - name: signups
     label: Signups
     description: New MUSE accounts created (product-led motion).
@@ -116,23 +132,23 @@ metrics:
 
   - name: blended_cac
     label: Blended CAC (USD)
-    description: All paid media spend divided by paid conversions in the same period. Blended on purpose — channel CAC depends on the attribution model.
+    description: Consumer paid media divided by paid conversions in the same period. Blended across channels on purpose, because channel CAC depends on the attribution model.
     type: ratio
     type_params:
-      numerator: marketing_spend
+      numerator: consumer_marketing_spend
       denominator: paid_conversions
 
   - name: cost_per_signup
     label: Cost per signup (USD)
     type: ratio
     type_params:
-      numerator: marketing_spend
+      numerator: consumer_marketing_spend
       denominator: signups
 
   - name: pipeline_per_marketing_dollar
     label: Pipeline per marketing dollar
-    description: Pipeline created divided by marketing spend in the same period.
+    description: Pipeline created divided by enterprise marketing spend in the same period.
     type: ratio
     type_params:
       numerator: pipeline_created
-      denominator: marketing_spend
+      denominator: enterprise_marketing_spend

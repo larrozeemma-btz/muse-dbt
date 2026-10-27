@@ -19,19 +19,19 @@ single dollar.
 
 1. **Last-touch would have us cut our two cheapest demand creators.**
    Content and paid search open a third of all signup journeys and get **zero**
-   last-touch credit. Under last-touch, paid search costs **$35k per signup**.
-   Under position-based it costs **$841**. Same spend, same signups, a 40×
+   last-touch credit. Under last-touch, paid search costs **$4,040 per signup**.
+   Under position-based it costs **$115**. Same spend, same signups, a 35×
    different story.
 2. **Retargeting looks like a star. That's exactly why I'd test it.**
    It gets 7 to 19 % of all signup credit depending on the model. Credit isn't
    proof, though. I'd run a four-week holdout before giving it more budget.
 3. **Content downloads fill the MQL queue, not the pipeline.**
-   They're 17 % of our leads but bring **$20 of bookings per lead**, against
-   **$1,906** for partner referrals. That isn't marketing versus sales. It's a
+   They're 18 % of our leads but bring **$39 of bookings per lead**, against
+   **$2,327** for partner referrals. That isn't marketing versus sales. It's a
    definition problem, and definitions can be fixed.
 4. **We're judging ABM and webinars on the wrong number.**
-   On sourced pipeline, LinkedIn ABM returns $1.1 per dollar. On influenced
-   pipeline it returns $13. Webinars influence $69 per dollar. Both numbers
+   On sourced pipeline, LinkedIn ABM returns $0.9 per dollar. On influenced
+   pipeline it returns $12. Webinars influence $77 per dollar. Both numbers
    belong in the review, side by side.
 
 ## 1. The models disagree most about who creates demand
@@ -40,21 +40,21 @@ Share of signup credit by channel, July 2025 to September 2026:
 
 | Channel | First touch | Last touch | Linear | Position-based | Time decay |
 |---|---:|---:|---:|---:|---:|
-| Organic search | 23.6 % | 15.5 % | 16.7 % | 18.2 % | 14.7 % |
-| Content (podcasts, blog, video) | 20.8 % | **0.0 %** | 9.4 % | 9.9 % | 5.1 % |
-| Paid social | 20.0 % | 24.2 % | 27.9 % | 25.1 % | 31.0 % |
-| Paid search | 12.2 % | **0.2 %** | 7.4 % | 6.7 % | 5.0 % |
-| Referral | 9.2 % | 14.9 % | 8.5 % | 10.4 % | 9.2 % |
-| Direct | 6.3 % | 37.5 % | 19.3 % | 20.6 % | 24.5 % |
+| Organic search | 24.5 % | 14.8 % | 16.7 % | 18.2 % | 14.3 % |
+| Content (podcasts, blog, video) | 21.0 % | **0.0 %** | 9.5 % | 10.0 % | 5.3 % |
+| Paid social | 19.9 % | 23.7 % | 27.7 % | 24.9 % | 30.8 % |
+| Paid search | 12.0 % | **0.2 %** | 7.6 % | 6.7 % | 5.2 % |
+| Referral | 8.9 % | 15.4 % | 8.5 % | 10.5 % | 9.4 % |
+| Direct | 5.9 % | 37.7 % | 19.3 % | 20.6 % | 24.5 % |
 
 What it costs us to get one signup, last 12 months:
 
 | Paid channel | First touch | Last touch | Position-based | Time decay |
 |---|---:|---:|---:|---:|
-| Content (podcast sponsorships) | **$85** | n/a | $179 | $347 |
-| Partnership | $202 | $159 | $205 | $241 |
-| Paid social | $443 | $363 | $352 | $286 |
-| Paid search | $460 | **$35,477** | $841 | $1,113 |
+| Content (podcast sponsorships) | **$11** | n/a | $22 | $41 |
+| Partnership | $28 | $20 | $27 | $31 |
+| Paid social | $59 | $50 | $47 | $38 |
+| Paid search | $64 | **$4,040** | $115 | $149 |
 
 **What's going on.** A typical journey starts with a podcast, an article or a
 search ad, and ends with a direct visit or a retargeting ad. Last-touch hands
@@ -81,20 +81,23 @@ patience is cheaper than six months scaling something we can't prove works.
 
 | Lead source | Leads | Lead to MQL | Win rate | Bookings per lead |
 |---|---:|---:|---:|---:|
-| Partner referral | 198 | 83 % | 40 % | **$1,906** |
-| Website demo request | 852 | 78 % | 29 % | $804 |
-| Trade show | 572 | 59 % | 22 % | $396 |
-| Webinar | 625 | 58 % | 22 % | $296 |
-| Content download | 679 | 31 % | 17 % | **$20** |
+| Partner referral | 193 | 85 % | 43 % | **$2,327** |
+| Website demo request | 833 | 79 % | 27 % | $710 |
+| Trade show | 539 | 60 % | 23 % | $473 |
+| Webinar | 587 | 49 % | 24 % | $284 |
+| Content download | 734 | 30 % | 14 % | **$39** |
+| Paid search | 400 | 49 % | 12 % | **$25** |
 
 On a dashboard, a full MQL queue looks like success. But sales development
 spends the same time on a content-download MQL as on a demo request, and the
-two are worth wildly different amounts.
+two are worth wildly different amounts. B2B paid-search leads have the same
+problem at a smaller scale: plenty of form fills, very few wins.
 
 **What I'd do.**
 - A content download alone shouldn't make someone an MQL. Wait for a second
   high-intent signal, like a demo-page visit or a webinar attended, and keep
-  everyone else in nurture.
+  everyone else in nurture. The same rule should apply to paid-search leads
+  that didn't ask for a demo.
 - Partner referrals convert best and close fastest. I'd grow the reseller
   program before adding another event to the calendar.
 
@@ -102,11 +105,11 @@ two are worth wildly different amounts.
 
 | Enterprise channel | Spend | Sourced pipeline per $ | Influenced pipeline per $ |
 |---|---:|---:|---:|
-| Paid search | $115k | $23.4 | $32.4 |
-| Partnership | $50k | $13.8 | $13.8 |
-| Webinar | $42k | $14.1 | **$68.6** |
-| Events | $85k | $13.2 | $21.4 |
-| LinkedIn ABM (paid social) | $212k | **$1.1** | $13.1 |
+| Paid search | $115k | $22.9 | $32.0 |
+| Partnership | $50k | $16.9 | $16.9 |
+| Webinar | $42k | $11.8 | **$77.2** |
+| Events | $85k | $13.5 | $26.2 |
+| LinkedIn ABM (paid social) | $212k | **$0.9** | $11.8 |
 
 I always report these two together, because each one alone tells a half-truth.
 Sourced pipeline undersells programs like ABM and webinars, which rarely create
@@ -122,9 +125,12 @@ sourced pipeline.
 
 Being clear about the limits is part of what makes the numbers trustworthy:
 
-- **12 % of paid upgrades have no marketing touch** in the 30-day window,
-  because people upgrade long after they sign up. So I attribute marketing to
-  signups and treat the upgrade to paid as a product metric.
-- **These are media CACs.** Spend excludes salaries and tooling.
+- **47 % of paid upgrades have no marketing touch** in the 30-day window,
+  because people upgrade months after they sign up. That's why I attribute
+  marketing to signups and treat the upgrade to paid as a product metric.
+  Attributing upgrades would quietly drop half of them.
+- **These are media CACs.** Spend excludes salaries and tooling. Consumer
+  spend is only ever divided by consumer outcomes, and enterprise spend by
+  pipeline, so neither motion inflates the other's CAC.
 - **No attribution model measures incrementality.** That's what holdout tests
   are for, and why I'd run one before any budget shift above 20 %.

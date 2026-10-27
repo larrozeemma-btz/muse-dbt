@@ -18,7 +18,8 @@ OUT = ROOT / "docs" / "index.html"
 
 QUERIES = {
     "weekly": """
-        select cast(week_start as varchar) as week, round(spend_usd) as spend, signups, paid_conversions,
+        select cast(week_start as varchar) as week, round(spend_usd) as spend, round(plg_spend_usd) as plg_spend,
+               round(enterprise_spend_usd) as ent_spend, signups, paid_conversions,
                blended_cac_usd as cac, new_leads, new_mqls, pipeline_created_usd as pipeline, closed_won_usd as won
         from marketing.rpt_weekly_marketing_review
         where week_start >= (select max(week_start) from marketing.rpt_weekly_marketing_review) - interval 51 week
@@ -45,7 +46,8 @@ QUERIES = {
         from c join s using (channel)""",
     "plg_funnel": """
         select first_touch_channel as channel, sum(visitors) as visitors, sum(signups) as signups,
-               sum(activated_users) as activated, sum(paid_within_90d) as paid
+               sum(activated_users) as activated, sum(paid_within_90d) as paid,
+               sum(paid_without_activation) as paid_no_activation
         from marketing.rpt_plg_funnel
         where month_start >= (select max(month_start) from marketing.rpt_plg_funnel) - interval 14 month
           and month_start <= (select max(month_start) from marketing.rpt_plg_funnel) - interval 3 month
@@ -133,8 +135,8 @@ footer { color: var(--muted); font-size: 13px; margin-top: 28px; }
 <div class="tiles" id="tiles"></div>
 
 <section>
-  <h2>Spend, signups and blended CAC</h2>
-  <p class="sub">Weekly, last 52 weeks. CAC = all paid media ÷ paid conversions (media CAC, not fully loaded).</p>
+  <h2>Consumer spend, signups and CAC</h2>
+  <p class="sub">Weekly, last 52 weeks, product-led motion only. CAC = consumer paid media ÷ paid conversions (media CAC, not fully loaded).</p>
   <div class="chart"><canvas id="weeklyChart"></canvas></div>
 </section>
 
@@ -152,8 +154,9 @@ footer { color: var(--muted); font-size: 13px; margin-top: 28px; }
 <div class="grid2">
   <section>
     <h2>Product-led funnel</h2>
-    <p class="sub">By first-touch channel, cohorts with ≥ 3 months to mature.</p>
+    <p class="sub">By first-touch channel, cohorts with ≥ 3 months to mature. Each rate is from the previous stage.</p>
     <div class="tablewrap"><table id="plgTable"></table></div>
+    <p class="note" id="plgNote"></p>
   </section>
   <section>
     <h2>Attribution coverage</h2>
@@ -198,9 +201,10 @@ const tiles = [
   ['Marketing spend', sum(cur,'spend'), sum(prev,'spend'), usdk, false],
   ['Signups', sum(cur,'signups'), sum(prev,'signups'), num, false],
   ['Paid conversions', sum(cur,'paid_conversions'), sum(prev,'paid_conversions'), num, false],
-  ['Blended CAC', sum(cur,'spend')/sum(cur,'paid_conversions'), sum(prev,'spend')/sum(prev,'paid_conversions'), usd, true],
+  ['Consumer CAC', sum(cur,'plg_spend')/sum(cur,'paid_conversions'), sum(prev,'plg_spend')/sum(prev,'paid_conversions'), usd, true],
   ['New leads', sum(cur,'new_leads'), sum(prev,'new_leads'), num, false],
   ['Pipeline created', sum(cur,'pipeline'), sum(prev,'pipeline'), usdk, false],
+  ['Pipeline per B2B $', sum(cur,'pipeline')/sum(cur,'ent_spend'), sum(prev,'pipeline')/sum(prev,'ent_spend'), v => '$' + v.toFixed(1), false],
   ['Closed-won', sum(cur,'won'), sum(prev,'won'), usdk, false],
 ];
 document.getElementById('tiles').innerHTML = tiles.map(([l, c, p, f, lowerIsBetter]) => {
@@ -212,9 +216,9 @@ document.getElementById('tiles').innerHTML = tiles.map(([l, c, p, f, lowerIsBett
 // ---- weekly chart
 new Chart(document.getElementById('weeklyChart'), {
   data: { labels: w.map(r => r.week), datasets: [
-    { type: 'bar', label: 'Spend (USD)', data: w.map(r => r.spend), backgroundColor: palette[1] + '99', yAxisID: 'y' },
+    { type: 'bar', label: 'Consumer spend (USD)', data: w.map(r => r.plg_spend), backgroundColor: palette[1] + '99', yAxisID: 'y' },
     { type: 'line', label: 'Signups', data: w.map(r => r.signups), borderColor: palette[0], backgroundColor: palette[0], yAxisID: 'y1', tension: .3, pointRadius: 0 },
-    { type: 'line', label: 'Blended CAC (USD)', data: w.map(r => r.cac), borderColor: palette[3], backgroundColor: palette[3], yAxisID: 'y2', tension: .3, pointRadius: 0, borderDash: [4,3] },
+    { type: 'line', label: 'Consumer CAC (USD)', data: w.map(r => r.cac), borderColor: palette[3], backgroundColor: palette[3], yAxisID: 'y2', tension: .3, pointRadius: 0, borderDash: [4,3] },
   ]},
   options: { maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
     scales: { x: { ticks: { maxTicksLimit: 12 } }, y: { position: 'left', title: { display: true, text: 'Spend' } },
@@ -251,8 +255,11 @@ if (ratio) document.getElementById('costNote').textContent +=
 // ---- tables
 const t = (id, head, rows) => document.getElementById(id).innerHTML =
   '<tr>' + head.map(h => `<th>${h}</th>`).join('') + '</tr>' + rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
-t('plgTable', ['First touch', 'Visitors', 'Signups', 'Visit→signup', 'Activated', 'Paid ≤ 90d'],
-  D.plg_funnel.map(r => [r.channel.replace('_', ' '), num(r.visitors), num(r.signups), pct(r.signups / r.visitors), pct(r.activated / r.signups), pct(r.paid / r.signups)]));
+t('plgTable', ['First touch', 'Visitors', 'Visit→signup', 'Signup→activated', 'Activated→paid ≤ 90d'],
+  D.plg_funnel.map(r => [r.channel.replace('_', ' '), num(r.visitors), pct(r.signups / r.visitors), pct(r.activated / r.signups), pct(r.paid / r.activated)]));
+const noAct = sum(D.plg_funnel, 'paid_no_activation'), allPaid = noAct + sum(D.plg_funnel, 'paid');
+document.getElementById('plgNote').textContent =
+  `Strict funnel: only activated users count as the paid step. ${num(noAct)} of ${num(allPaid)} payers (${pct(noAct / allPaid)}) paid without activating and are tracked separately.`;
 t('covTable', ['Outcome', 'Count', 'Coverage'], D.coverage.map(r => [r.conversion_type.replace('_', ' '), num(r.conversions), pct(r.coverage)]));
 t('entTable', ['Lead source', 'Leads', 'MQLs', 'SQLs', 'Opps', 'Won', 'Win rate', 'Bookings', 'Bookings / lead'],
   D.enterprise.map(r => [r.source, num(r.leads), num(r.mqls), num(r.sqls), num(r.opps), num(r.won), pct(r.win_rate), usdk(r.won_usd), usd(r.won_per_lead)]));

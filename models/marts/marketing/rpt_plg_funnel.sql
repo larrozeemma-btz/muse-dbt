@@ -1,7 +1,10 @@
 {#
     Product-led funnel by month of first visit and first-touch channel:
         visitor → signup → activated (≥ N plays in the first days) → paid within 90 days
-    Each stage is a strict subset of the previous one (tested).
+    Each stage is a strict subset of the previous one (tested): the last stage
+    counts activated users who paid. Users who pay without ever activating are
+    real, but they are not "the next step" of this funnel, so they are reported
+    separately (`paid_without_activation`) instead of inflating it.
 #}
 
 with journeys as (
@@ -75,11 +78,14 @@ select
     count(*)                                                                    as visitors,
     sum(case when signed_up then 1 else 0 end)                                  as signups,
     sum(case when signed_up and activated then 1 else 0 end)                    as activated_users,
-    sum(case when signed_up and paid_90d then 1 else 0 end)                     as paid_within_90d,
+    sum(case when signed_up and activated and paid_90d then 1 else 0 end)       as paid_within_90d,
+    sum(case when signed_up and not activated and paid_90d then 1 else 0 end)   as paid_without_activation,
     round(sum(case when signed_up then 1 else 0 end) / nullif(count(*), 0), 4)  as visit_to_signup_rate,
     round(sum(case when signed_up and activated then 1 else 0 end)
           / nullif(sum(case when signed_up then 1 else 0 end), 0), 4)           as activation_rate,
-    round(sum(case when signed_up and paid_90d then 1 else 0 end)
+    round(sum(case when signed_up and activated and paid_90d then 1 else 0 end)
+          / nullif(sum(case when signed_up and activated then 1 else 0 end), 0), 4) as activated_to_paid_rate,
+    round(sum(case when signed_up and activated and paid_90d then 1 else 0 end)
           / nullif(sum(case when signed_up then 1 else 0 end), 0), 4)           as signup_to_paid_rate
 from staged
 group by 1, 2

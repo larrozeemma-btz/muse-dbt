@@ -1,7 +1,7 @@
 {{ config(materialized='table') }}
 
 {#
-    SCORING stage — the MUSE core algorithm (slide 6), in SQL:
+    SCORING stage: the MUSE core algorithm, in SQL:
 
         FOR each song IN songList
             score ← 0.5 × genre + 0.3 × history + 0.2 × popularity
@@ -9,7 +9,7 @@
 
     One row per listener × retrieved candidate. Tracks can belong to several
     genres and several artists, so each signal takes the best match across
-    them. The deck sorts with Merge Sort (O(n log n)); here the warehouse's
+    them. The original pseudocode sorts with Merge Sort (O(n log n)); here the warehouse's
     sort inside a window function does it for every listener at once.
 #}
 

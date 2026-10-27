@@ -1,5 +1,5 @@
 {#
-    topN ← FIRST MIN(N, LENGTH(sortedSongs)) songs   (slide 6, N = var muse_top_n)
+    topN ← FIRST MIN(N, LENGTH(sortedSongs)) songs   (N = var muse_top_n)
 
     The playlist served to each listener, enriched for display and explained.
 #}
@@ -31,7 +31,7 @@ select
     scores.popularity_score,
     scores.candidate_sources,
     scores.is_cold_start,
-    -- explainability (slide 2 "hidden reasoning"): which weighted signal contributed most?
+    -- explainability: which weighted signal contributed most?
     case
         when scores.is_cold_start and scores.genre_match_score > 0 then 'matches the genres you picked'
         when scores.is_cold_start then 'popular on MUSE right now'

@@ -8,8 +8,6 @@ seeds:
         data_tests: [unique, not_null]
       - name: genre_family
         data_tests: [not_null]
-  - name: presentation_song_scores
-    description: The 10 fictional tracks from the MUSE deck (slide 8) with their three pre-computed input scores.
 
   - name: channel_grouping_rules
     description: >
