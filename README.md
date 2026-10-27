@@ -146,6 +146,12 @@ a dbt Cloud BigQuery connection (location **EU**) at this repo. On the **BigQuer
 sandbox** (no billing, no DML) set the environment variable `DBT_BQ_SANDBOX=true`:
 the incremental fact is then rebuilt as a partitioned, clustered table.
 
+**Dev / prod isolation** — production jobs write to the layer datasets (`staging`,
+`core`, `recommendations`, `analytics`…); development runs on BigQuery are prefixed
+with the developer's dataset (`dbt_dev_core`…) so experiments never touch production
+([`macros/generate_schema_name.sql`](macros/generate_schema_name.sql)). A daily dbt
+Cloud job rebuilds production and publishes the docs.
+
 Cross-database macros live in [`macros/cross_db.sql`](macros/cross_db.sql)
 (timestamp parsing, string explode, date spine, date arithmetic…).
 
