@@ -34,9 +34,9 @@ everyone agrees on, and the dashboard the weekly review reads.
 
 ### Example finding
 
-Content and paid search open **33 %** of signup journeys but receive **0 %** of
-last-touch credit. Under last-touch, paid search costs **$4,040 per signup**.
-Under position-based it costs **$115**. Full analysis and recommendations
+Content opens a fifth of signup journeys at **$11 per signup** and receives
+**0 %** of last-touch credit. Paid search gets almost none (0.2 %), which makes
+it look **35× more expensive** than under position-based ($4,040 vs $115 per signup). Full analysis and recommendations
 in the [insights memo](docs/insights_memo.md).
 
 ---

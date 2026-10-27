@@ -17,13 +17,16 @@ single dollar.
 
 ## The short version
 
-1. **Last-touch would have us cut our two cheapest demand creators.**
-   Content and paid search open a third of all signup journeys and get **zero**
-   last-touch credit. Under last-touch, paid search costs **$4,040 per signup**.
-   Under position-based it costs **$115**. Same spend, same signups, a 35×
-   different story.
+1. **Last-touch would have us cut our cheapest demand creator, and misprice paid search.**
+   Content opens a fifth of all signup journeys at **$11 per signup** (first
+   touch) and gets **0 %** of last-touch credit. Paid search gets almost none
+   (0.2 %), which makes it look **35× more expensive** than it is: $4,040 per
+   signup under last-touch, against $115 under position-based. Paid search is
+   still our priciest paid channel in every model, so the real question is how
+   much of it to keep, not whether to cut it.
 2. **Retargeting looks like a star. That's exactly why I'd test it.**
-   It gets 7 to 19 % of all signup credit depending on the model. Credit isn't
+   The Meta retargeting campaign (part of paid social) gets 7 to 19 % of all
+   signup credit depending on the model. Credit isn't
    proof, though. I'd run a four-week holdout before giving it more budget.
 3. **Content downloads fill the MQL queue, not the pipeline.**
    They're 18 % of our leads but bring **$39 of bookings per lead**, against
@@ -33,6 +36,10 @@ single dollar.
    On sourced pipeline, LinkedIn ABM returns $0.9 per dollar. On influenced
    pipeline it returns $12. Webinars influence $77 per dollar. Both numbers
    belong in the review, side by side.
+5. **Our activation definition misses half of our future payers.**
+   48 % of paying users never hit "10 plays in the first 7 days". Switching to
+   "active on 3 different days in the first 14 days" covers 69 % of payers and
+   predicts payment 3.7× better than non-activation, against 2.6× today.
 
 ## 1. The models disagree most about who creates demand
 
@@ -63,13 +70,22 @@ it simply vanishes.
 
 **What I'd do.** Make position-based our planning default, and always show it
 next to first and last touch so nobody has to take one model on faith. That's
-how the dashboard's *Attribution* view is built. And no channel gets cut on
-last-touch numbers alone.
+how the dashboard's *Attribution* view is built. Don't cut content on
+last-touch numbers. And judge paid search on its position-based cost ($115 per
+signup, our most expensive paid channel), not on the $4,040 that last-touch
+makes up.
 
 ## 2. Retargeting: test before we scale
 
-Retargeting shows up right before people sign up in about a third of journeys,
-and every model rewards it for that. That's what makes me cautious. It mostly
+Retargeting is a campaign inside the paid social channel. Here is its share of
+**all** signup credit under each model:
+
+| | First touch | Last touch | Linear | Position-based | Time decay |
+|---|---:|---:|---:|---:|---:|
+| Meta retargeting (inside paid social) | 7.0 % | 7.8 % | 15.7 % | 11.7 % | **18.9 %** |
+
+It shows up right before people sign up in about a third of journeys, and every
+model rewards it for that. That's what makes me cautious. It mostly
 reaches people who were already about to convert, so the real question isn't
 "does it get credit?" but "would these people have signed up anyway?"
 
@@ -120,6 +136,35 @@ never be summed across channels.
 **What I'd do.** Put both in the weekly review. For programs designed to
 accelerate deals, set targets on influenced pipeline and deal velocity, not on
 sourced pipeline.
+
+## 5. Rethinking what "activated" means
+
+The funnel counts a user as *activated* after 10 plays in their first 7 days.
+Activated users do pay more often (14 % vs 5 %), but **48 % of paying users never
+reach that bar**. A definition that misses half of the people it's supposed to
+predict won't be trusted for long, so I tested alternatives on the July 2025 to
+June 2026 signup cohorts:
+
+| Definition | Activated | Pay rate if activated | Pay rate if not | Lift | Payers covered |
+|---|---:|---:|---:|---:|---:|
+| ≥ 10 plays in 7 days (today) | 30 % | 14.2 % | 5.4 % | 2.6× | 52 % |
+| ≥ 20 plays in 14 days | 29 % | 15.7 % | 4.8 % | 3.3× | 58 % |
+| ≥ 1 like or playlist add in 14 days | 52 % | 11.4 % | 4.3 % | 2.6× | 74 % |
+| ≥ 4 active days in 14 days | 24 % | 18.1 % | 4.7 % | 3.8× | 55 % |
+| **≥ 3 active days in 14 days** | 37 % | 14.8 % | 3.9 % | **3.7×** | **69 %** |
+
+*Paid = upgraded between day 14 and day 90. Users who paid in their first two
+weeks are left out, because a definition has to be observable before the
+outcome it predicts.*
+
+**What it tells us:** coming back matters more than listening a lot in one go.
+Habit predicts payment better than volume.
+
+**What I'd do.** Propose "active on 3 different days in the first 14 days" as
+the new activation definition. Before switching, I'd check it on a cohort the
+analysis didn't see, agree on it with product and growth (it changes the
+numbers they're measured on), and restate the history so the trend line doesn't
+jump on the day we switch.
 
 ## What this analysis can't tell us
 
