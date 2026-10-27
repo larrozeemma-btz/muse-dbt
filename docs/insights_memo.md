@@ -38,8 +38,8 @@ single dollar.
    belong in the review, side by side.
 5. **Our activation definition misses half of our future payers.**
    48 % of paying users never hit "10 plays in the first 7 days". Switching to
-   "active on 3 different days in the first 14 days" covers 69 % of payers and
-   predicts payment 3.7× better than non-activation, against 2.6× today.
+   "active on 3 different days in the first 14 days" covers 69 % of payers, and
+   users who meet it are 3.7× likelier to pay than those who don't (2.6× today).
 
 ## 1. The models disagree most about who creates demand
 
