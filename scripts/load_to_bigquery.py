@@ -21,7 +21,12 @@ from google.cloud import bigquery
 
 ROOT = Path(__file__).resolve().parent.parent
 EXPORT_DIR = ROOT / "data" / "export"
-TABLES = ["spotify_tracks", "app_users", "onboarding_genre_preferences", "subscriptions", "listening_events"]
+TABLES = [
+    "spotify_tracks", "app_users", "onboarding_genre_preferences", "subscriptions", "listening_events",
+    # go-to-market data (scripts/load_marketing_data.py)
+    "marketing_campaigns", "ad_platform_spend", "web_sessions",
+    "crm_accounts", "crm_leads", "crm_opportunities", "crm_campaign_members",
+]
 
 
 def export_parquet(con, table):

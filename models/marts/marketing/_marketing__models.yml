@@ -1,0 +1,96 @@
+version: 2
+
+models:
+  - name: dim_marketing_channels
+    description: Shared channel taxonomy (group, paid or not, which motion it serves).
+    columns:
+      - name: channel
+        data_tests: [unique, not_null]
+
+  - name: dim_campaigns
+    description: Campaigns with channel, motion and lifetime spend.
+    columns:
+      - name: campaign_id
+        data_tests: [unique, not_null]
+
+  - name: fct_ad_spend
+    description: Daily paid media spend per campaign, in USD.
+    columns:
+      - name: spend_id
+        data_tests: [unique, not_null]
+      - name: channel
+        data_tests: [not_null]
+
+  - name: fct_marketing_attribution
+    description: >
+      Conversion × touchpoint × attribution model, with the share of credit and the
+      credited value. Five models: first_touch, last_touch, linear, position_based, time_decay.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["conversion_id", "touchpoint_id", "attribution_model"]
+    columns:
+      - name: attribution_model
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['first_touch', 'last_touch', 'linear', 'position_based', 'time_decay']
+      - name: credit
+        data_tests: [not_null]
+
+  - name: rpt_attribution_by_channel
+    description: Month × channel × attribution model — credited conversions and value, spend, cost per conversion, ROAS.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["month_start", "motion", "conversion_type", "attribution_model", "channel"]
+
+  - name: rpt_attribution_coverage
+    description: Share of conversions that have at least one touch in the lookback window.
+    columns:
+      - name: coverage_rate
+        data_tests: [not_null]
+
+  - name: rpt_plg_funnel
+    description: Visitor → signup → activated → paid (90 days), by first-visit month and first-touch channel.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["month_start", "first_touch_channel"]
+
+  - name: rpt_enterprise_funnel
+    description: Lead → MQL → SQL → opportunity → won, with velocity, by lead cohort month and source.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["month_start", "lead_source"]
+
+  - name: rpt_marketing_pipeline
+    description: Sourced vs influenced pipeline and bookings by quarter and channel.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["quarter_start", "channel"]
+
+  - name: rpt_weekly_marketing_review
+    description: Weekly exec review — spend, signups, paid conversions, CAC, leads, pipeline, bookings, week-over-week change.
+    columns:
+      - name: week_start
+        data_tests: [unique, not_null]
+
+exposures:
+  - name: weekly_marketing_review
+    label: Weekly marketing & exec review dashboard
+    type: dashboard
+    maturity: high
+    url: https://larrozeemma-btz.github.io/muse-dbt/
+    description: The dashboard marketing leadership reads every Monday.
+    depends_on:
+      - ref('rpt_weekly_marketing_review')
+      - ref('rpt_attribution_by_channel')
+      - ref('rpt_plg_funnel')
+      - ref('rpt_enterprise_funnel')
+      - ref('rpt_marketing_pipeline')
+      - ref('rpt_attribution_coverage')
+    owner:
+      name: Emma Larroze

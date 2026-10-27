@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: ad_platforms
+    schema: raw
+    description: Daily campaign spend exported from ad platforms (Google, Meta, TikTok, LinkedIn, ...) and event/partner invoices.
+    tables:
+      - name: ad_platform_spend
+        description: One row per platform × campaign × day. Spend is in the account currency (USD or EUR).
+
+  - name: web_analytics
+    schema: raw
+    description: Web sessions from the CDP. `anonymous_id` is a browser cookie; `user_id` appears once the visitor signs up.
+    tables:
+      - name: web_sessions
+      - name: marketing_campaigns
+        description: Campaign registry (mirrors the CRM Campaign object), keyed by the utm_campaign code.
+
+  - name: salesforce
+    schema: raw
+    description: Salesforce objects for the MUSE for Business (sales-led) motion. CRM column names kept as exported.
+    tables:
+      - name: crm_leads
+        description: Lead object. The CRM sync occasionally re-sends rows (duplicate Ids).
+      - name: crm_accounts
+      - name: crm_opportunities
+      - name: crm_campaign_members
+        description: Campaign responses — the marketing touchpoints of the enterprise journey.

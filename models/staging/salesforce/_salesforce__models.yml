@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: stg_salesforce__leads
+    description: One row per Lead (CRM duplicates removed), lead source normalised.
+    columns:
+      - name: lead_id
+        data_tests: [unique, not_null]
+      - name: lead_source
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Website Demo Request', 'Webinar', 'Trade Show', 'Content Download', 'Paid Search', 'LinkedIn Ads', 'Partner Referral', 'Outbound']
+      - name: converted_opportunity_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_salesforce__opportunities')
+                field: opportunity_id
+
+  - name: stg_salesforce__accounts
+    columns:
+      - name: account_id
+        data_tests: [unique, not_null]
+
+  - name: stg_salesforce__opportunities
+    columns:
+      - name: opportunity_id
+        data_tests: [unique, not_null]
+      - name: amount_usd
+        data_tests: [not_null]
+      - name: stage_name
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Discovery', 'Demo', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost']
+
+  - name: stg_salesforce__campaign_members
+    columns:
+      - name: campaign_member_id
+        data_tests: [unique, not_null]
+      - name: channel
+        data_tests: [not_null]

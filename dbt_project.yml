@@ -36,6 +36,15 @@ vars:
   muse_trending_candidates: 50          # global fallback, also covers cold start
   # Sessionisation: a gap longer than this starts a new listening session.
   muse_session_timeout_minutes: 30
+  # Marketing measurement
+  muse_eur_to_usd: 1.087                 # finance's planning FX rate
+  muse_plg_lookback_days: 30             # attribution window before a PLG conversion
+  muse_enterprise_lookback_days: 365     # attribution window before an opportunity
+  muse_time_decay_half_life_days: 7      # time-decay model: a touch 7 days earlier counts half
+  muse_activation_plays: 10              # "activated" = this many plays ...
+  muse_activation_window_days: 7         # ... within this many days of signup
+  # Marketing reports stop at the last complete week with full data
+  muse_reporting_cutoff_date: "2026-09-13"
   # Last day of data — used as "today" for churn / recency metrics.
   muse_as_of_date: "2026-09-30"
 
@@ -55,6 +64,8 @@ models:
         +schema: recommendations
       analytics:
         +schema: analytics
+      marketing:
+        +schema: marketing
       presentation:
         +schema: presentation
 

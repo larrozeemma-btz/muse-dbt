@@ -10,3 +10,23 @@ seeds:
         data_tests: [not_null]
   - name: presentation_song_scores
     description: The 10 fictional tracks from the MUSE deck (slide 8) with their three pre-computed input scores.
+
+  - name: channel_grouping_rules
+    description: >
+      Ordered rules turning raw utm_source / utm_medium into marketing channels
+      (first matching rule wins, `*` matches anything). Keeping them as data lets
+      marketing ops change the grouping without touching SQL.
+    columns:
+      - name: rule_order
+        data_tests: [unique, not_null]
+      - name: channel
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('marketing_channels')
+                field: channel
+  - name: marketing_channels
+    description: The channel taxonomy shared by marketing, finance and sales.
+    columns:
+      - name: channel
+        data_tests: [unique, not_null]

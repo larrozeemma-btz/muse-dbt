@@ -1,0 +1,13 @@
+channel,channel_group,is_paid,motion_scope,description
+paid_search,Paid,true,both,Search ads (Google / Microsoft)
+paid_social,Paid,true,both,Social ads incl. retargeting and LinkedIn ABM
+content,Owned,false,both,"Podcast sponsorships, blog, video and gated guides"
+organic_search,Earned,false,plg,Unpaid search traffic
+email,Owned,false,plg,Lifecycle and newsletter emails
+referral,Earned,false,plg,Invite-a-friend and in-app sharing
+partnership,Paid,true,both,Telco bundle and reseller partners
+direct,Earned,false,plg,No campaign information
+webinar,Owned,true,enterprise,Webinar series
+events,Paid,true,enterprise,Trade shows and field events
+outbound,Owned,false,enterprise,SDR outbound prospecting
+unmapped,Unmapped,false,both,Traffic no grouping rule covers yet

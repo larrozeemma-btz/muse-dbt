@@ -1,0 +1,138 @@
+version: 2
+
+# ---------------------------------------------------------------------------
+# Semantic layer: every marketing metric is defined once, here, and queried
+# the same way by dashboards, notebooks and the dbt Semantic Layer API.
+# Plain-language definitions live in docs/metrics_glossary.md.
+# ---------------------------------------------------------------------------
+
+models:
+  - name: fct_marketing_conversions
+    description: One row per marketing outcome (signup, paid conversion, pipeline created, closed-won).
+    columns:
+      - name: conversion_id
+        data_tests: [unique, not_null]
+
+  - name: metricflow_time_spine
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        granularity: day
+
+semantic_models:
+  - name: ad_spend
+    description: Paid media spend, one row per campaign per day.
+    model: ref('fct_ad_spend')
+    defaults:
+      agg_time_dimension: spend_date
+    entities:
+      - name: spend
+        type: primary
+        expr: spend_id
+    dimensions:
+      - name: spend_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel
+        type: categorical
+      - name: motion
+        type: categorical
+      - name: platform
+        type: categorical
+    measures:
+      - name: spend_usd
+        description: Paid media spend converted to USD.
+        agg: sum
+      - name: clicks
+        agg: sum
+
+  - name: conversion
+    description: Marketing outcomes for both motions.
+    model: ref('fct_marketing_conversions')
+    defaults:
+      agg_time_dimension: conversion_date
+    entities:
+      - name: conversion
+        type: primary
+        expr: conversion_id
+    dimensions:
+      - name: conversion_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: conversion_type
+        type: categorical
+      - name: motion
+        type: categorical
+    measures:
+      - name: conversions
+        agg: count
+        expr: conversion_id
+      - name: conversion_value_usd
+        agg: sum
+        expr: value_usd
+
+metrics:
+  - name: marketing_spend
+    label: Marketing spend (USD)
+    description: Paid media spend across all platforms, in USD at finance's planning FX rate.
+    type: simple
+    type_params:
+      measure: spend_usd
+
+  - name: signups
+    label: Signups
+    description: New MUSE accounts created (product-led motion).
+    type: simple
+    type_params:
+      measure: conversions
+    filter: "{{ Dimension('conversion__conversion_type') }} = 'plg_signup'"
+
+  - name: paid_conversions
+    label: Paid conversions
+    description: Accounts starting their first paid subscription.
+    type: simple
+    type_params:
+      measure: conversions
+    filter: "{{ Dimension('conversion__conversion_type') }} = 'plg_paid'"
+
+  - name: pipeline_created
+    label: Pipeline created (USD)
+    description: Amount of enterprise opportunities created, on the opportunity creation date.
+    type: simple
+    type_params:
+      measure: conversion_value_usd
+    filter: "{{ Dimension('conversion__conversion_type') }} = 'enterprise_pipeline'"
+
+  - name: closed_won_bookings
+    label: Closed-won bookings (USD)
+    description: Annual contract value of enterprise deals won, on the close date.
+    type: simple
+    type_params:
+      measure: conversion_value_usd
+    filter: "{{ Dimension('conversion__conversion_type') }} = 'enterprise_won'"
+
+  - name: blended_cac
+    label: Blended CAC (USD)
+    description: All paid media spend divided by paid conversions in the same period. Blended on purpose — channel CAC depends on the attribution model.
+    type: ratio
+    type_params:
+      numerator: marketing_spend
+      denominator: paid_conversions
+
+  - name: cost_per_signup
+    label: Cost per signup (USD)
+    type: ratio
+    type_params:
+      numerator: marketing_spend
+      denominator: signups
+
+  - name: pipeline_per_marketing_dollar
+    label: Pipeline per marketing dollar
+    description: Pipeline created divided by marketing spend in the same period.
+    type: ratio
+    type_params:
+      numerator: pipeline_created
+      denominator: marketing_spend

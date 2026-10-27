@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_marketing__campaigns
+    columns:
+      - name: campaign_id
+        data_tests: [unique, not_null]
+      - name: campaign_code
+        data_tests: [unique, not_null]
+      - name: channel
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('marketing_channels')
+                field: channel
+
+  - name: stg_ad_platforms__spend
+    description: Daily spend per campaign, converted to USD.
+    columns:
+      - name: spend_id
+        data_tests: [unique, not_null]
+      - name: spend_usd
+        data_tests: [not_null]
+      - name: campaign_code
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_marketing__campaigns')
+                field: campaign_code
+
+  - name: stg_web__sessions
+    columns:
+      - name: session_id
+        data_tests: [unique, not_null]
+      - name: anonymous_id
+        data_tests: [not_null]
+      - name: session_started_at
+        data_tests: [not_null]

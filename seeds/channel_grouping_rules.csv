@@ -1,0 +1,14 @@
+rule_order,utm_source,utm_medium,channel
+1,tiktok,cpc,paid_social
+2,*,cpc,paid_search
+3,*,paid_social,paid_social
+4,*,paidsocial,paid_social
+5,*,organic,organic_search
+6,*,email,email
+7,*,audio,content
+8,*,video,content
+9,*,content,content
+10,invite,*,referral
+11,muse_app,share,referral
+12,*,partner,partnership
+13,(direct),*,direct

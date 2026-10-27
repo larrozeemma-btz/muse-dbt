@@ -1,0 +1,75 @@
+version: 2
+
+models:
+  - name: int_web_sessions_channeled
+    description: Web sessions with their marketing channel from the grouping rules.
+    columns:
+      - name: session_id
+        data_tests: [unique, not_null]
+      - name: channel
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('marketing_channels')
+                field: channel
+
+  - name: int_identity_map
+    description: anonymous_id → user_id, from the first session carrying both.
+    columns:
+      - name: anonymous_id
+        data_tests: [unique, not_null]
+
+  - name: int_marketing_touchpoints
+    description: Every marketing touch of both motions (web sessions + CRM campaign responses).
+    columns:
+      - name: touchpoint_id
+        data_tests: [unique, not_null]
+      - name: motion
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['plg', 'enterprise']
+
+  - name: int_marketing_conversions
+    description: Signups, paid conversions, pipeline created and closed-won deals.
+    columns:
+      - name: conversion_id
+        data_tests: [unique, not_null]
+      - name: conversion_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['plg_signup', 'plg_paid', 'enterprise_pipeline', 'enterprise_won']
+
+  - name: int_attribution_weights
+    description: Conversion × eligible touchpoint, with the credit each of the five models gives it.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["conversion_id", "touchpoint_id"]
+
+unit_tests:
+  - name: test_attribution_weights_three_touch_journey
+    description: >
+      Three touches 20, 7 and 0 days before a paid conversion: first/last get
+      everything under their model, linear splits in thirds, U-shape gives
+      40/20/40, time decay (7-day half-life) favours the latest touch.
+    model: int_attribution_weights
+    overrides:
+      vars: {muse_plg_lookback_days: 30, muse_enterprise_lookback_days: 365, muse_time_decay_half_life_days: 7}
+    given:
+      - input: ref('int_marketing_conversions')
+        rows:
+          - {conversion_id: c1, conversion_type: plg_paid, motion: plg, person_key: u1, converted_at: "2026-03-21 12:00:00", value_usd: 120}
+      - input: ref('int_marketing_touchpoints')
+        rows:
+          - {touchpoint_id: t1, motion: plg, person_key: u1, touched_at: "2026-03-01 12:00:00", channel: content}
+          - {touchpoint_id: t2, motion: plg, person_key: u1, touched_at: "2026-03-14 12:00:00", channel: email}
+          - {touchpoint_id: t3, motion: plg, person_key: u1, touched_at: "2026-03-21 12:00:00", channel: paid_social}
+          - {touchpoint_id: t0, motion: plg, person_key: u1, touched_at: "2026-01-01 12:00:00", channel: paid_search}
+    expect:
+      rows:
+        - {touchpoint_id: t1, weight_first_touch: 1, weight_last_touch: 0, weight_position_based: 0.4}
+        - {touchpoint_id: t2, weight_first_touch: 0, weight_last_touch: 0, weight_position_based: 0.2}
+        - {touchpoint_id: t3, weight_first_touch: 0, weight_last_touch: 1, weight_position_based: 0.4}

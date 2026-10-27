@@ -22,8 +22,19 @@ jobs:
       - name: Load raw data (real Spotify catalog + 1k simulated listeners)
         run: python scripts/load_raw_data.py --users 1000
 
+      - name: Load simulated go-to-market data (web, ads, Salesforce)
+        run: python scripts/load_marketing_data.py --b2b-leads 800
+
       - name: dbt build (seeds, models, tests)
         run: dbt build --profiles-dir .
 
       - name: Generate docs
         run: dbt docs generate --profiles-dir .
+
+      - name: Validate semantic layer
+        run: mf validate-configs
+        env:
+          DBT_PROFILES_DIR: .
+
+      - name: Build dashboard
+        run: python scripts/build_dashboard.py
